@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ledger — Budget Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #FAF7F0;
+    --paper-dim: #F1ECE0;
+    --ink: #1C2321;
+    --ink-soft: #4A524F;
+    --accent: #2F6B4F;
+    --accent-soft: #D9E8DE;
+    --rule: #D8D2C4;
+    --alert: #B23A2E;
+    --alert-soft: #F3DEDB;
+    --radius: 3px;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'Inter', sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper-dim);
+    color: var(--ink);
+    font-family: var(--sans);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 32px 16px 80px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .receipt {
+    width: 100%;
+    max-width: 420px;
+    background: var(--paper);
+    box-shadow: 0 1px 2px rgba(28,35,33,0.06), 0 8px 24px rgba(28,35,33,0.08);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .masthead {
+    padding: 28px 24px 20px;
+    text-align: center;
+    border-bottom: 1px dashed var(--rule);
+  }
+  .masthead .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .masthead h1 {
+    font-family: var(--mono);
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 6px 0 4px;
+  }
+  .masthead .sub {
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+
+  .ticket {
+    padding: 22px 24px;
+  }
+  .ticket + .ticket {
+    border-top: 1px dashed var(--rule);
+  }
+  .ticket-label {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .ticket-label h2 {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    margin: 0;
+  }
+  .ticket-label .tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-soft);
+  }
+
+  .perf {
+    position: relative;
+    height: 18px;
+    background:
+      radial-gradient(circle at 8px 0, transparent 7px, var(--paper) 7px) top / 16px 16px repeat-x,
+      var(--paper-dim);
+    margin: 0;
+  }
+  .perf::before, .perf::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0;
+    height: 9px;
+    background:
+      radial-gradient(circle at 8px 0, transparent 7px, var(--paper) 7px) top / 16px 16px repeat-x;
+  }
+  .perf::before { top: 0; }
+  .perf::after { bottom: 0; transform: rotate(180deg); }
+
+  label.field {
+    display: block;
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+  .field-group { margin-bottom: 14px; }
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="date"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--paper);
+    font-family: var(--sans);
+    font-size: 14px;
+    color: var(--ink);
+    transition: border-color 0.15s ease;
+  }
+  input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+    border-color: var(--accent);
+  }
+
+  fieldset {
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 12px 12px 14px;
+    margin: 0 0 14px;
+  }
+  legend {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+    padding: 0 6px;
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .field-row:last-child { margin-bottom: 0; }
+
+  button {
+    width: 100%;
+    padding: 13px 16px;
+    border-radius: var(--radius);
+    border: none;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: transform 0.08s ease, opacity 0.15s ease;
+  }
+  button:active { transform: scale(0.98); }
+
+  .btn-primary {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .btn-primary:hover { opacity: 0.88; }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--accent);
+    border: 1px dashed var(--accent);
+    font-size: 12px;
+    padding: 9px 12px;
+  }
+  .btn-secondary:hover { background: var(--accent-soft); }
+
+  .btn-ghost {
+    background: var(--paper-dim);
+    color: var(--ink);
+    border: 1px solid var(--rule);
+  }
+  .btn-ghost:hover { background: var(--rule); }
+
+  .btn-stack > * + * { margin-top: 10px; }
+
+  .status-line {
+    margin-top: 12px;
+    font-family: var(--mono);
+    font-size: 12px;
+    text-align: center;
+    min-height: 16px;
+    color: var(--ink-soft);
+  }
+  .status-line.success { color: var(--accent); }
+  .status-line.error { color: var(--alert); }
+
+  #preview {
+    display: none;
+    width: 100%;
+    border-radius: var(--radius);
+    margin-top: 12px;
+    border: 1px solid var(--rule);
+  }
+
+  .pill {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="receipt">
+
+    <div class="masthead">
+      <div class="eyebrow">Personal Ledger</div>
+      <h1>Budget Slip</h1>
+      <div class="sub">Scan it. Log it. Balance it.</div>
+    </div>
+
+    <div class="ticket" id="newMonthSection">
+      <div class="ticket-label">
+        <h2>New Cycle</h2>
+        <span class="tag">§ 01</span>
+      </div>
+
+      <div class="field-group row-2">
+        <div>
+          <label class="field" for="startDate">Start date</label>
+          <input type="date" id="startDate">
+        </div>
+        <div>
+          <label class="field" for="endDate">End date</label>
+          <input type="date" id="endDate">
+        </div>
+      </div>
+
+      <fieldset>
+        <legend>Income</legend>
+        <div id="incomeFields"></div>
+        <button type="button" class="btn-secondary" onclick="addField('incomeFields', 'income')">+ Add source</button>
+      </fieldset>
+
+      <fieldset>
+        <legend>Savings</legend>
+        <div id="savingsFields"></div>
+        <button type="button" class="btn-secondary" onclick="addField('savingsFields', 'savings')">+ Add entry</button>
+      </fieldset>
+
+      <button class="btn-primary" id="newMonthBtn" onclick="createNewMonth()">Open New Cycle</button>
+      <div class="status-line" id="monthStatus"></div>
+    </div>
+
+    <div class="perf" aria-hidden="true"></div>
+
+    <div class="ticket" id="scanSection">
+      <div class="ticket-label">
+        <h2>Log a Receipt</h2>
+        <span class="tag">§ 02</span>
+      </div>
+
+      <div class="btn-stack">
+        <button class="btn-ghost" onclick="document.getElementById('cameraInput').click()">📷 Take Photo</button>
+        <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none">
+
+        <button class="btn-ghost" onclick="document.getElementById('galleryInput').click()">🖼 Upload Image</button>
+        <input type="file" id="galleryInput" accept="image/*" style="display:none">
+      </div>
+
+      <img id="preview" alt="Receipt preview">
+      <div class="status-line" id="status"></div>
+    </div>
+
+  </div>
+
+<script>
+  function addField(containerId, prefix) {
+    const container = document.getElementById(containerId);
+    const row = document.createElement('div');
+    row.className = 'field-row';
+
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.placeholder = 'Name';
+    nameInput.className = prefix + '-name';
+
+    const amountInput = document.createElement('input');
+    amountInput.type = 'number';
+    amountInput.placeholder = 'Amount';
+    amountInput.className = prefix + '-amount';
+
+    row.appendChild(nameInput);
+    row.appendChild(amountInput);
+    container.appendChild(row);
+  }
+
+  addField('incomeFields', 'income');
+  addField('savingsFields', 'savings');
+
+  function collectEntries(prefix) {
+    const names = document.querySelectorAll('.' + prefix + '-name');
+    const amounts = document.querySelectorAll('.' + prefix + '-amount');
+    const entries = [];
+    for (let i = 0; i < names.length; i++) {
+      const name = names[i].value.trim();
+      const amount = amounts[i].value;
+      if (name && amount) entries.push({ name: name, amount: parseFloat(amount) });
+    }
+    return entries;
+  }
+
+  const newMonthBtn = document.getElementById('newMonthBtn');
+  const monthStatus = document.getElementById('monthStatus');
+
+  function createNewMonth() {
+    const payload = {
+      start_date: document.getElementById('startDate').value,
+      end_date: document.getElementById('endDate').value,
+      income: collectEntries('income'),
+      savings: collectEntries('savings'),
+    };
+
+    monthStatus.textContent = 'Opening cycle…';
+    monthStatus.className = 'status-line';
+
+    fetch('/new-month', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'created') {
+          monthStatus.textContent = 'Cycle opened.';
+          monthStatus.className = 'status-line success';
+          document.getElementById('newMonthSection').style.display = 'none';
+        } else {
+          monthStatus.textContent = data.status || data.error || 'Could not open cycle.';
+          monthStatus.className = 'status-line error';
+        }
+      })
+      .catch(err => {
+        monthStatus.textContent = 'Error: ' + err.message;
+        monthStatus.className = 'status-line error';
+      });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    fetch('/month-exists')
+      .then(res => res.json())
+      .then(data => {
+        if (data.exists) {
+          document.getElementById('newMonthSection').style.display = 'none';
+        }
+      })
+      .catch(err => console.error('Could not check month status:', err));
+  });
+
+  const cameraInput = document.getElementById('cameraInput');
+  const galleryInput = document.getElementById('galleryInput');
+  const preview = document.getElementById('preview');
+  const status = document.getElementById('status');
+
+  function handleFile(file) {
+    if (!file) return;
+
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = 'block';
+    status.textContent = 'Reading receipt…';
+    status.className = 'status-line';
+
+    const formData = new FormData();
+    formData.append('receipt', file);
+
+    fetch('/scan-receipt', { method: 'POST', body: formData })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'received') {
+          status.textContent = 'Logged to ledger.';
+          status.className = 'status-line success';
+        } else {
+          status.textContent = data.error || 'Could not read receipt.';
+          status.className = 'status-line error';
+        }
+      })
+      .catch(err => {
+        status.textContent = 'Error: ' + err.message;
+        status.className = 'status-line error';
+      });
+  }
+
+  cameraInput.addEventListener('change', () => handleFile(cameraInput.files[0]));
+  galleryInput.addEventListener('change', () => handleFile(galleryInput.files[0]));
+</script>
+</body>
+</html>

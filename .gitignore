@@ -1,0 +1,6 @@
+budget-recipt-reader-dd91f18db0d1.json
+scp/
+.env
+venv/
+budget.db
+__pycache__/
