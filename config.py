@@ -1,8 +1,10 @@
+
+
 import os
 from anthropic import Anthropic
 from dotenv import load_dotenv
 from googleapiclient.discovery import build
-from google.oauth2.credentials import Credentials
+from google.oauth2.service_account import Credentials
 from db import get_user
 from flask import  session
 
@@ -25,3 +27,6 @@ credentials = Credentials.from_service_account_file(
 )
 sheets_service = build('sheets', version='v4', credentials=credentials)
 drive_service = build('drive', version='v3', credentials=credentials)
+
+
+
