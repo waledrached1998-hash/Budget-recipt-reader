@@ -21,17 +21,19 @@ def build_flow():
         }
     }
     flow = Flow.from_client_config(client_config, scopes=SCOPES, redirect_uri=c.GOOGLE_REDIRECT_URI)
+    flow.autogenerate_code_verifier = True
     return flow
 
 
 def get_login_url():
     flow = build_flow()
     auth_url, _ = flow.authorization_url(access_type="offline", include_granted_scopes="true", prompt="consent")
-    return auth_url
+    return auth_url, flow.code_verifier
 
 
-def handle_callback(request_url):
+def handle_callback(request_url, code_verifier):
     flow = build_flow()
+    flow.code_verifier = code_verifier
     flow.fetch_token(authorization_response=request_url)
     credentials = flow.credentials
 

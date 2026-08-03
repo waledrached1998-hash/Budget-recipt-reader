@@ -13,11 +13,15 @@ def hello():
 
 @app.route('/login')
 def login():
-    return redirect(auth.get_login_url())
+    login_url, code_verifier = auth.get_login_url()
+    session['code_verifier'] = code_verifier
+    return redirect(login_url)
+
 
 @app.route('/auth/callback')
 def auth_callback():
-    user_id, email = auth.handle_callback(request.url)
+    code_verifier = session.get('code_verifier')
+    user_id, email = auth.handle_callback(request.url, code_verifier)
     session['user_id'] = user_id
     session['email'] = email
     return redirect('/')
