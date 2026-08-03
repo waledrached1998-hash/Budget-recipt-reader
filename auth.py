@@ -10,6 +10,7 @@ SCOPES = [
     "https://www.googleapis.com/auth/drive.file",
 ]
 
+# auth.py
 def build_flow():
     client_config = {
         "web": {
@@ -37,7 +38,6 @@ def handle_callback(request_url, code_verifier):
     flow.fetch_token(authorization_response=request_url)
     credentials = flow.credentials
 
-    # Get the user's email and Google ID
     userinfo = requests.get(
         "https://www.googleapis.com/oauth2/v2/userinfo",
         headers={"Authorization": f"Bearer {credentials.token}"}
