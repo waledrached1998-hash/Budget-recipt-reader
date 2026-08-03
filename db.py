@@ -13,6 +13,15 @@ def init_db():
             PRIMARY KEY (user_id, sheet_id)
         )
     ''')
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id TEXT PRIMARY KEY,
+            email TEXT UNIQUE NOT NULL,
+            access_token TEXT,
+            refresh_token TEXT,
+            token_expiry TEXT
+        )
+    ''')
     conn.commit()
     conn.close()
 
@@ -56,3 +65,27 @@ def get_current_tab_valid_until(user_id, sheet_id):
     if row is None:
         return None
     return row[0]
+
+def save_user(user_id, email, access_token, refresh_token, token_expiry):
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute('''
+        INSERT INTO users (id, email, access_token, refresh_token, token_expiry)
+        VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+            email = excluded.email,
+            access_token = excluded.access_token,
+            refresh_token = excluded.refresh_token,
+            token_expiry = excluded.token_expiry
+    ''', (user_id, email, access_token, refresh_token, token_expiry))
+    conn.commit()
+    conn.close()
+
+
+def get_user(user_id):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.execute('SELECT id, email, access_token, refresh_token, token_expiry FROM users WHERE id = ?', (user_id,))
+    row = cursor.fetchone()
+    conn.close()
+    if row is None:
+        return None
+    return {"id": row[0], "email": row[1], "access_token": row[2], "refresh_token": row[3], "token_expiry": row[4]}

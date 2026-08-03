@@ -1,7 +1,8 @@
-from flask import Flask, request, send_from_directory
+from flask import Flask, request, send_from_directory, redirect, session
 import sheets as s
 import claude_client as cc
 from db import init_db
+import auth
 
 app = Flask(__name__, static_folder='public')
 init_db()
@@ -10,6 +11,21 @@ init_db()
 def hello():
     return send_from_directory('public', 'index.html')
 
+@app.route('/login')
+def login():
+    return redirect(auth.get_login_url())
+
+@app.route('/auth/callback')
+def auth_callback():
+    user_id, email = auth.handle_callback(request.url)
+    session['user_id'] = user_id
+    session['email'] = email
+    return redirect('/')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect('/')
 
 @app.route('/month-exists')
 def month_exists():
