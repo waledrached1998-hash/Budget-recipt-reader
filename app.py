@@ -27,10 +27,10 @@ def auth_callback():
     session['user_id'] = user_id
     session['email'] = email
     existing_sheet_id = s.get_user_sheet_id(user_id)
+    existing_sheet_id = s.get_user_sheet_id(user_id)
     if existing_sheet_id is None:
-        drive_service = s.get_user_drive_service(user_id)
-        new_sheet_id = s.create_user_sheet(c.sheet_id, drive_service, email)
-        s.save_user_sheet(user_id,new_sheet_id)
+        new_sheet_id = s.create_user_sheet(c.sheet_id, email)
+        s.save_user_sheet(user_id, new_sheet_id)
     return redirect('/')
 
 @app.route('/logout')
