@@ -1,19 +1,22 @@
 import config as c
+from flask import session
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-from db import get_current_tab as db_get_current_tab, set_current_tab,get_current_tab_valid_until
+from db import get_current_tab as db_get_current_tab, get_sheet_id, get_user, set_current_tab,get_current_tab_valid_until,set_user_sheet
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
 
 
-USER_ID = "me"  # placeholder for now
 
-def duplicate_template_tab(request_json,new_sheet_name):
-    result = c.sheets_service.spreadsheets().get(spreadsheetId=c.sheet_id).execute()
+
+def duplicate_template_tab(request_json,new_sheet_name,sheets_service,sheet_id,user_id):
+    result = sheets_service.spreadsheets().get(spreadsheetId=sheet_id).execute()
 
     for sheet in result['sheets']:
         if sheet['properties']['title'] == 'Budget I':
             prime_tab_id = sheet['properties']['sheetId']
 
-    if does_tab_exist(new_sheet_name):
+    if does_tab_exist(new_sheet_name,sheets_service,sheet_id):
         return {"status": "already exists"}, 400
 
     body = {
@@ -27,13 +30,13 @@ def duplicate_template_tab(request_json,new_sheet_name):
             }
         ]
     }
-    c.sheets_service.spreadsheets().batchUpdate(spreadsheetId=c.sheet_id, body=body).execute()
-    set_current_tab(USER_ID,c.sheet_id,new_sheet_name,request_json['end_date'])
+    sheets_service.spreadsheets().batchUpdate(spreadsheetId=sheet_id, body=body).execute()
+    set_current_tab(user_id,sheet_id,new_sheet_name,request_json['end_date'])
 
 
-def write_income(request_json, sheet_tab):
-    income_result = c.sheets_service.spreadsheets().values().get(
-        spreadsheetId=c.sheet_id,
+def write_income(request_json, sheet_tab,sheets_service,sheet_id):
+    income_result = sheets_service.spreadsheets().values().get(
+        spreadsheetId=sheet_id,
         range=f"{sheet_tab}!D27:D37"
     ).execute()
     values = income_result.get('values', [])
@@ -47,12 +50,12 @@ def write_income(request_json, sheet_tab):
                 {"range": f"{sheet_tab}!J{current_income_row}", "values": [[entry['amount']]]}
             ]
         }
-        c.sheets_service.spreadsheets().values().batchUpdate(spreadsheetId=c.sheet_id, body=body).execute()
+        sheets_service.spreadsheets().values().batchUpdate(spreadsheetId=sheet_id, body=body).execute()
 
 
-def write_savings(request_json, sheet_tab):
-    income_result = c.sheets_service.spreadsheets().values().get(
-        spreadsheetId=c.sheet_id,
+def write_savings(request_json, sheet_tab,sheets_service,sheet_id):
+    income_result = sheets_service.spreadsheets().values().get(
+        spreadsheetId=sheet_id,
         range=f"{sheet_tab}!D42:D57"
     ).execute()
     values = income_result.get('values', [])
@@ -66,10 +69,10 @@ def write_savings(request_json, sheet_tab):
                 {"range": f"{sheet_tab}!J{current_savings_row}", "values": [[entry['amount']]]}
             ]
         }
-        c.sheets_service.spreadsheets().values().batchUpdate(spreadsheetId=c.sheet_id, body=body).execute()
+        sheets_service.spreadsheets().values().batchUpdate(spreadsheetId=sheet_id, body=body).execute()
 
 
-def write_date(request_json, sheet_tab):
+def write_date(request_json, sheet_tab,sheets_service,sheet_id):
     body = {
         "valueInputOption": "USER_ENTERED",
         "data": [
@@ -77,12 +80,12 @@ def write_date(request_json, sheet_tab):
             {"range": f"{sheet_tab}!G10", "values": [[request_json['end_date']]]}
         ]
     }
-    c.sheets_service.spreadsheets().values().batchUpdate(spreadsheetId=c.sheet_id, body=body).execute()
+    sheets_service.spreadsheets().values().batchUpdate(spreadsheetId=sheet_id, body=body).execute()
 
 
-def write_expenses(parsed, sheet_tab):
-    result = c.sheets_service.spreadsheets().values().get(
-        spreadsheetId=c.sheet_id,
+def write_expenses(parsed, sheet_tab,sheets_service,sheet_id):
+    result = sheets_service.spreadsheets().values().get(
+        spreadsheetId=sheet_id,
         range=f"{sheet_tab}!G62:G322"
     ).execute()
     values = result.get('values', [])
@@ -98,25 +101,25 @@ def write_expenses(parsed, sheet_tab):
                 {"range": f"{sheet_tab}!K{current_row}", "values": [[parsed['store_name']]]},
             ]
         }
-        c.sheets_service.spreadsheets().values().batchUpdate(spreadsheetId=c.sheet_id, body=body).execute()
+        sheets_service.spreadsheets().values().batchUpdate(spreadsheetId=sheet_id, body=body).execute()
         current_row = current_row + 1
 
 
-def does_tab_exist(tab_name):
-    result = c.sheets_service.spreadsheets().get(spreadsheetId=c.sheet_id).execute()
+def does_tab_exist(tab_name,sheets_service,sheet_id):
+    result = sheets_service.spreadsheets().get(spreadsheetId=sheet_id).execute()
     for sheet in result['sheets']:
         if sheet['properties']['title'] == tab_name:
             return True
     return False
 
 
-def get_current_tab():
-    title = db_get_current_tab(USER_ID,c.sheet_id)
+def get_current_tab(user_id,sheet_id):
+    title = db_get_current_tab(user_id,sheet_id)
 
     return title
 
-def get_current_tab_still_valid():
-    valid_until_str = get_current_tab_valid_until(USER_ID, c.sheet_id)
+def get_current_tab_still_valid(user_id,sheet_id):
+    valid_until_str = get_current_tab_valid_until(user_id, sheet_id)
     if valid_until_str is None:
         return False
 
@@ -128,3 +131,40 @@ def get_current_tab_still_valid():
 def get_next_tab_name(request_json):
     end_date = datetime.strptime(request_json['end_date'], "%Y-%m-%d")
     return end_date.strftime("%B-%Y")
+
+def get_user_credentials(user_id) :
+    user = get_user(user_id)
+
+    user_credentials = Credentials(
+        token=user['access_token'],
+        refresh_token=user['refresh_token'],
+        token_uri="https://oauth2.googleapis.com/token",
+        client_id=c.GOOGLE_CLIENT_ID ,
+        client_secret=c.GOOGLE_CLIENT_SECRET,
+    )
+    return user_credentials
+
+def get_user_sheets_service(user_id):
+    creds = get_user_credentials(user_id)
+    return build('sheets', version='v3', credentials=creds)
+
+def get_user_drive_service(user_id):
+    creds = get_user_credentials(user_id)
+    return build('drive', version='v3', credentials=creds)
+
+def get_user_sheet_id (user_id) :
+    sheet_id = get_sheet_id(user_id)
+    return sheet_id
+
+def create_user_sheet(template_file_id, drive_service, user_email):
+    copied_file = drive_service.files().copy(
+        fileId=template_file_id,
+        body={"name": f"Budget - {user_email}"}
+    ).execute()
+    return copied_file['id']
+
+
+def save_user_sheet(user_id,sheet_id):
+    set_user_sheet(user_id,sheet_id)
+
+

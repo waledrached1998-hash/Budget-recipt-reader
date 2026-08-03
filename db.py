@@ -39,6 +39,19 @@ def set_current_tab(user_id, sheet_id, tab_name, valid_until):
     conn.close()
 
 
+def set_user_sheet(user_id, sheet_id):
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute('''
+        INSERT INTO user_sheet (user_id, sheet_id)
+        VALUES (?, ?)
+        ON CONFLICT(user_id, sheet_id) DO UPDATE SET
+            current_tab_name = excluded.current_tab_name,
+            valid_until = excluded.valid_until
+    ''', (user_id, sheet_id,))
+    conn.commit()
+    conn.close()
+
+
 def get_current_tab(user_id, sheet_id):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.execute('''
@@ -89,3 +102,15 @@ def get_user(user_id):
     if row is None:
         return None
     return {"id": row[0], "email": row[1], "access_token": row[2], "refresh_token": row[3], "token_expiry": row[4]}
+
+def get_sheet_id(user_id):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.execute('''
+            SELECT sheet_id FROM user_sheet
+            WHERE user_id = ? 
+        ''', (user_id,))
+    row = cursor.fetchone()
+    conn.close()
+    if row is None:
+        return None
+    return row[0]
