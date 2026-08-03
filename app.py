@@ -1,10 +1,12 @@
 from flask import Flask, request, send_from_directory, redirect, session
 import sheets as s
 import claude_client as cc
+import config as c
 from db import init_db
 import auth
 
 app = Flask(__name__, static_folder='public')
+app.secret_key = c.FLASK_SECRET_KEY
 init_db()
 
 @app.route('/')
