@@ -156,23 +156,17 @@ def get_user_sheet_id (user_id) :
     sheet_id = get_sheet_id(user_id)
     return sheet_id
 
-def create_user_sheet(template_file_id, user_email):
-    copied_file = c.drive_service.files().copy(
+def create_user_sheet(template_file_id, user_email, user_drive_service):
+    c.drive_service.permissions().create(
+        fileId=template_file_id,
+        body={"type": "user", "role": "reader", "emailAddress": user_email}
+    ).execute()
+
+    copied_file = user_drive_service.files().copy(
         fileId=template_file_id,
         body={"name": f"Budget - {user_email}"}
     ).execute()
-    new_sheet_id = copied_file['id']
-
-    c.drive_service.permissions().create(
-        fileId=new_sheet_id,
-        body={
-            "type": "user",
-            "role": "writer",
-            "emailAddress": user_email
-        }
-    ).execute()
-
-    return new_sheet_id
+    return copied_file['id']
 
 def save_user_sheet(user_id,sheet_id):
     set_user_sheet(user_id,sheet_id)
