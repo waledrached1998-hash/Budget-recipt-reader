@@ -23,7 +23,10 @@ KEY_PATH = os.path.join(BASE_DIR, "scp", "budget-recipt-reader-dd91f18db0d1.json
 
 credentials = Credentials.from_service_account_file(
     KEY_PATH,
-    scopes=['https://www.googleapis.com/auth/spreadsheets']
+    scopes=[
+        'https://www.googleapis.com/auth/spreadsheets',
+        'https://www.googleapis.com/auth/drive',
+    ]
 )
 sheets_service = build('sheets', version='v4', credentials=credentials)
 drive_service = build('drive', version='v3', credentials=credentials)
