@@ -51,7 +51,7 @@ def write_income(request_json, sheet_tab,sheets_service,sheet_id):
             ]
         }
         sheets_service.spreadsheets().values().batchUpdate(spreadsheetId=sheet_id, body=body).execute()
-
+        current_income_row = current_income_row+1
 
 def write_savings(request_json, sheet_tab,sheets_service,sheet_id):
     income_result = sheets_service.spreadsheets().values().get(
@@ -70,7 +70,7 @@ def write_savings(request_json, sheet_tab,sheets_service,sheet_id):
             ]
         }
         sheets_service.spreadsheets().values().batchUpdate(spreadsheetId=sheet_id, body=body).execute()
-
+        current_savings_row = current_savings_row+1
 
 def write_date(request_json, sheet_tab,sheets_service,sheet_id):
     body = {

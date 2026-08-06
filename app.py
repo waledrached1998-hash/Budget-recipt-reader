@@ -80,6 +80,9 @@ def scan_receipt():
     s.write_expenses(parsed, tab_name,sheets_service,sheet_id)
     return {"status": "received"}
 
+@app.route('/debug-session')
+def debug_session():
+    return {"user_id": session.get('user_id'), "email": session.get('email')}
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000, debug=True)
