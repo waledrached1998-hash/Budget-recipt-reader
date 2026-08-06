@@ -83,10 +83,23 @@ def new_month():
 @app.route('/scan-receipt', methods=["POST"])
 @login_required
 def scan_receipt():
-    
 
+    if 'receipt' not in request.files :
+        return {"error": "No file was attached"}, 400
+    
     file = request.files['receipt']
-    parsed = cc.scan_receipt_image(file)
+
+    if not file.mimetype.startswith('image/'):
+        return {"error": "The attached file is not an image"}, 400
+
+    try :
+        parsed = cc.scan_receipt_image(file)
+    except Exception as e:
+        print(f"Error scanning receipt: {e}")
+        return {"error": "Couldn't read that receipt. Please try again."}, 400
+
+    if not parsed['is_receipt']: 
+        return {"error": "The photo that you have uploaded is not of a reciept"}, 400
     
     return {"status": "parsed", "data": parsed}
 

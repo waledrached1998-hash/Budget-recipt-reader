@@ -3,8 +3,24 @@ import json
 import config as c
 
 categories = ["Groceries","Take out & restaurants","Going out","Clothing","Electronics","Home essentials","Medicine","Gifts","Transportation","Other"]
-json_format = '{"store_name": "Lidl", "date":"2026-07-28", "items":{"Groceries": 34.50, "Clothing": 12.00}}'
-apiRequest = f"Extract the place name and purchase date from the receipt image and only include:{categories} that had matching items, each with their total and format the result as a JSON  and Format date as 'YYYY-MM-DD', it should somthing like this {json_format}"
+
+json_format_true = '{"is_receipt": true, "store_name": "Lidl", "date": "2026-07-28", "items": {"Groceries": 34.50, "Clothing": 12.00}}'
+json_format_false = '{"is_receipt": false}'
+
+apiRequest = f"""You will be shown an image. Follow these steps in order:
+
+1. First, determine whether the image is a real receipt or invoice showing a purchase.
+2. If it is NOT a receipt or invoice, respond with exactly this JSON and nothing else:
+{json_format_false}
+3. If it IS a receipt or invoice, extract:
+   - The store or merchant name
+   - The purchase date, converted to YYYY-MM-DD format (not the format printed on the receipt)
+   - Every item's cost grouped into these categories, only including categories that had a matching item: {categories}
+
+Respond with ONLY valid JSON, no other text, no markdown code fences, matching this exact shape:
+{json_format_true}
+
+Return nothing except one of these two JSON shapes."""
 
 def scan_receipt_image(file) :
     image_bytes = file.read()
