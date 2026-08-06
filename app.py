@@ -1,4 +1,5 @@
 from flask import Flask, request, send_from_directory, redirect, session
+from functools import wraps
 import sheets as s
 import claude_client as cc
 import config as c
@@ -9,8 +10,19 @@ app = Flask(__name__, static_folder='public')
 app.secret_key = c.FLASK_SECRET_KEY
 init_db()
 
+
+def login_required(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect('/')
+        return f(*args, **kwargs)
+    return wrapper
+
 @app.route('/')
 def hello():
+    if 'user_id' not in session:
+        return send_from_directory('public', 'login.html')
     return send_from_directory('public', 'index.html')
 
 @app.route('/login')
@@ -39,6 +51,7 @@ def logout():
     return redirect('/')
 
 @app.route('/month-exists')
+@login_required
 def month_exists():
     user_id = session['user_id']
     sheet_id = s.get_user_sheet_id(user_id)
@@ -47,6 +60,7 @@ def month_exists():
 
 
 @app.route('/new-month', methods=["POST"])
+@login_required
 def new_month():
     request_json = request.json
     user_id = session['user_id']
@@ -67,6 +81,7 @@ def new_month():
 
 
 @app.route('/scan-receipt', methods=["POST"])
+@login_required
 def scan_receipt():
     user_id = session['user_id']
     sheet_id = s.get_user_sheet_id(user_id)
@@ -80,9 +95,7 @@ def scan_receipt():
     s.write_expenses(parsed, tab_name,sheets_service,sheet_id)
     return {"status": "received"}
 
-@app.route('/debug-session')
-def debug_session():
-    return {"user_id": session.get('user_id'), "email": session.get('email')}
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000, debug=True)
