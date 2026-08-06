@@ -3,7 +3,7 @@ from functools import wraps
 import sheets as s
 import claude_client as cc
 import config as c
-from db import init_db
+from db import init_db,get_categories,set_category,delete_category
 import auth
 
 app = Flask(__name__, static_folder='public')
@@ -38,6 +38,8 @@ def hello():
         return send_from_directory('public', 'login.html')
     return send_from_directory('public', 'index.html')
 
+
+
 @app.route('/login')
 def login():
     login_url, code_verifier = auth.get_login_url()
@@ -55,6 +57,7 @@ def auth_callback():
     if existing_sheet_id is None:
         user_drive_service = s.get_user_drive_service(user_id)
         new_sheet_id = s.create_user_sheet(c.sheet_id, email, user_drive_service)
+        s.seed_default_categories(user_id)
         s.save_user_sheet(user_id, new_sheet_id)
     return redirect('/')
 
@@ -62,6 +65,11 @@ def auth_callback():
 def logout():
     session.clear()
     return redirect('/')
+
+@app.route('/settings')
+@login_required
+def settings_page():
+    return send_from_directory('public', 'settings.html')
 
 @app.route('/month-exists')
 @login_required
@@ -106,7 +114,7 @@ def scan_receipt():
         return {"error": "The attached file is not an image"}, 400
 
     try :
-        parsed = cc.scan_receipt_image(file)
+        parsed = cc.scan_receipt_image(file,session['user_id'])
     except Exception as e:
         print(f"Error scanning receipt: {e}")
         return {"error": "Couldn't read that receipt. Please try again."}, 400
@@ -154,5 +162,32 @@ def cycle_status():
     is_active = s.get_current_tab_still_valid(user_id,sheet_id)
 
     return {"active": is_active}
+
+@app.route('/categories', methods=["GET"])
+@login_required
+def list_categories():
+    categories = get_categories(session['user_id'])
+    return {"categories": categories}
+
+@app.route('/categories/add', methods=["POST"])
+@login_required
+def add_category():
+    user_id = session['user_id']
+    set_category(user_id,request.json['category'])
+    sheet_id = s.get_user_sheet_id(user_id)
+    sheets_service = s.get_user_sheets_service(user_id)
+    s.sync_categories_to_sheet(user_id,sheets_service,sheet_id)
+    return {"status": "added"}
+
+@app.route('/categories/remove', methods=["POST"])
+@login_required
+def remove_category():
+    user_id = session['user_id']
+    delete_category(user_id,request.json['category'])
+    sheet_id = s.get_user_sheet_id(user_id)
+    sheets_service = s.get_user_sheets_service(user_id)
+    s.sync_categories_to_sheet(user_id,sheets_service,sheet_id)
+    return {"status": "removed"}
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000, debug=True)

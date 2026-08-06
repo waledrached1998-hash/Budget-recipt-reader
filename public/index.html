@@ -80,6 +80,7 @@
   .signout-link { font-family: var(--mono); font-size: 12px; color: var(--ink-soft); text-decoration: none; border-bottom: 1px dashed var(--rule); padding-bottom: 1px; }
   .signout-link:hover { color: var(--alert); border-bottom-color: var(--alert); }
   #mySheetLink:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  #categoriesLink:hover { color: var(--accent); border-bottom-color: var(--accent); }
   .link-sep { color: var(--rule); margin: 0 8px; }
   #reviewSection { display: none; }
   .review-hint { font-size: 12px; color: var(--ink-soft); margin-bottom: 14px; line-height: 1.5; }
@@ -192,6 +193,8 @@
     <div class="perf" aria-hidden="true"></div>
 
     <div class="ticket" style="text-align:center; padding: 16px 24px;">
+      <a class="signout-link" href="/settings" id="categoriesLink">Categories</a>
+      <span class="link-sep">·</span>
       <a class="signout-link" href="#" id="mySheetLink" target="_blank" rel="noopener">Open my sheet</a>
       <span class="link-sep">·</span>
       <a class="signout-link" href="/logout">Sign out</a>

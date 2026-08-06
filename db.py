@@ -22,6 +22,13 @@ def init_db():
             token_expiry TEXT
         )
     ''')
+    conn.execute(''' 
+        CREATE TABLE IF NOT EXISTS user_categories (
+            user_id TEXT,
+            category TEXT,
+            PRIMARY KEY (user_id, category)
+        )
+    ''')
     conn.commit()
     conn.close()
 
@@ -114,3 +121,30 @@ def get_sheet_id(user_id):
     if row is None:
         return None
     return row[0]
+
+def get_categories(user_id):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.execute('''
+            SELECT category FROM user_categories
+            WHERE user_id = ? 
+        ''', (user_id,))
+    rows = cursor.fetchall()
+    conn.close()
+    return [row[0] for row in rows]
+
+def set_category(user_id,category):
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute('''
+        INSERT INTO user_categories (user_id,category)
+        VALUES (?, ?)
+    ''', (user_id, category))
+    conn.commit()
+    conn.close()
+
+def delete_category(user_id, category):
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute('''
+        DELETE user_categories WHERE user_id = ? AND category = ?
+    ''', (user_id, category))
+    conn.commit()
+    conn.close()

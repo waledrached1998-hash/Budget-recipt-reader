@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slipnote — Categories</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#2F6B4F">
+<link rel="icon" href="/icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #FAF7F0;
+    --paper-dim: #F1ECE0;
+    --ink: #1C2321;
+    --ink-soft: #4A524F;
+    --accent: #2F6B4F;
+    --accent-soft: #D9E8DE;
+    --rule: #D8D2C4;
+    --alert: #B23A2E;
+    --alert-soft: #F3DEDB;
+    --radius: 3px;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'Inter', sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper-dim); color: var(--ink);
+    font-family: var(--sans); min-height: 100vh; display: flex;
+    justify-content: center; padding: 32px 16px 80px; -webkit-font-smoothing: antialiased;
+  }
+  .receipt {
+    width: 100%; max-width: 420px; background: var(--paper);
+    box-shadow: 0 1px 2px rgba(28,35,33,0.06), 0 8px 24px rgba(28,35,33,0.08);
+    border-radius: var(--radius); overflow: hidden;
+  }
+  .masthead { padding: 24px 24px 18px; text-align: center; border-bottom: 1px dashed var(--rule); position: relative; }
+  .back-link {
+    position: absolute; left: 20px; top: 24px;
+    font-family: var(--mono); font-size: 12px; color: var(--ink-soft);
+    text-decoration: none; border-bottom: 1px dashed var(--rule); padding-bottom: 1px;
+  }
+  .back-link:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  .masthead .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  .masthead h1 { font-family: var(--mono); font-size: 22px; font-weight: 700; letter-spacing: -0.01em; margin: 6px 0 4px; }
+  .masthead .sub { font-size: 13px; color: var(--ink-soft); }
+  .ticket { padding: 22px 24px; }
+  .ticket-label { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
+  .ticket-label h2 { font-family: var(--mono); font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink); margin: 0; }
+  .ticket-label .tag { font-family: var(--mono); font-size: 11px; color: var(--ink-soft); }
+
+  .category-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 12px; border: 1px solid var(--rule); border-radius: var(--radius);
+    margin-bottom: 8px; font-size: 14px;
+  }
+  .category-row span { flex: 1; }
+  .category-row button {
+    width: auto; background: none; border: none; color: var(--alert);
+    font-family: var(--mono); font-size: 11px; cursor: pointer; padding: 4px 6px;
+  }
+  .category-row button:hover { text-decoration: underline; }
+
+  .add-row { display: flex; gap: 8px; margin-top: 14px; }
+  .add-row input {
+    flex: 1; padding: 10px 12px; border: 1px solid var(--rule); border-radius: var(--radius);
+    background: var(--paper); font-family: var(--sans); font-size: 14px; color: var(--ink);
+  }
+  .add-row input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  .add-row button {
+    width: auto; padding: 10px 16px; border-radius: var(--radius); border: 1px dashed var(--accent);
+    background: transparent; color: var(--accent); font-family: var(--mono); font-size: 12px;
+    font-weight: 600; cursor: pointer;
+  }
+  .add-row button:hover { background: var(--accent-soft); }
+
+  .status-line {
+    margin-top: 12px; font-family: var(--mono); font-size: 12px;
+    text-align: center; min-height: 16px; color: var(--ink-soft);
+  }
+  .status-line.success { color: var(--accent); }
+  .status-line.error { color: var(--alert); }
+
+  .empty-hint {
+    font-size: 12px; color: var(--ink-soft); text-align: center; padding: 12px 0;
+  }
+</style>
+</head>
+<body>
+
+  <div class="receipt">
+    <div class="masthead">
+      <a class="back-link" href="/">‹ Back</a>
+      <div class="eyebrow">Personal Ledger</div>
+      <h1>Categories</h1>
+      <div class="sub">These sort every receipt you scan.</div>
+    </div>
+
+    <div class="ticket">
+      <div class="ticket-label">
+        <h2>Your Categories</h2>
+        <span class="tag">§ 03</span>
+      </div>
+
+      <div id="categoryList"></div>
+      <div class="empty-hint" id="emptyHint" style="display:none;">No categories yet — add your first one below.</div>
+
+      <div class="add-row">
+        <input type="text" id="newCategoryInput" placeholder="e.g. Subscriptions">
+        <button type="button" onclick="addCategory()">+ Add</button>
+      </div>
+
+      <div class="status-line" id="statusLine"></div>
+    </div>
+  </div>
+
+<script>
+  const categoryList = document.getElementById('categoryList');
+  const emptyHint = document.getElementById('emptyHint');
+  const statusLine = document.getElementById('statusLine');
+  const newCategoryInput = document.getElementById('newCategoryInput');
+
+  function loadCategories() {
+    fetch('/categories')
+      .then(res => res.json())
+      .then(data => renderCategories(data.categories || []))
+      .catch(err => {
+        statusLine.textContent = 'Could not load categories.';
+        statusLine.className = 'status-line error';
+      });
+  }
+
+  function renderCategories(categories) {
+    categoryList.innerHTML = '';
+    if (categories.length === 0) {
+      emptyHint.style.display = 'block';
+      return;
+    }
+    emptyHint.style.display = 'none';
+
+    categories.forEach(category => {
+      const row = document.createElement('div');
+      row.className = 'category-row';
+
+      const label = document.createElement('span');
+      label.textContent = category;
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.textContent = '× remove';
+      removeBtn.addEventListener('click', () => removeCategory(category));
+
+      row.appendChild(label);
+      row.appendChild(removeBtn);
+      categoryList.appendChild(row);
+    });
+  }
+
+  function addCategory() {
+    const category = newCategoryInput.value.trim();
+    if (!category) return;
+
+    statusLine.textContent = 'Adding…';
+    statusLine.className = 'status-line';
+
+    fetch('/categories/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ category }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'added') {
+          statusLine.textContent = 'Added.';
+          statusLine.className = 'status-line success';
+          newCategoryInput.value = '';
+          loadCategories();
+        } else {
+          statusLine.textContent = data.error || 'Could not add category.';
+          statusLine.className = 'status-line error';
+        }
+      })
+      .catch(err => {
+        statusLine.textContent = 'Error: ' + err.message;
+        statusLine.className = 'status-line error';
+      });
+  }
+
+  function removeCategory(category) {
+    statusLine.textContent = 'Removing…';
+    statusLine.className = 'status-line';
+
+    fetch('/categories/remove', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ category }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'removed') {
+          statusLine.textContent = 'Removed.';
+          statusLine.className = 'status-line success';
+          loadCategories();
+        } else {
+          statusLine.textContent = data.error || 'Could not remove category.';
+          statusLine.className = 'status-line error';
+        }
+      })
+      .catch(err => {
+        statusLine.textContent = 'Error: ' + err.message;
+        statusLine.className = 'status-line error';
+      });
+  }
+
+  newCategoryInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') addCategory();
+  });
+
+  loadCategories();
+</script>
+</body>
+</html>

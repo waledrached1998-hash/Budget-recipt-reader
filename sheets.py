@@ -2,11 +2,13 @@ import config as c
 from flask import session
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-from db import get_current_tab as db_get_current_tab, get_sheet_id, get_user, set_current_tab,get_current_tab_valid_until,set_user_sheet,save_user
+from db import get_current_tab as db_get_current_tab, get_sheet_id, get_user, set_current_tab,get_current_tab_valid_until,set_user_sheet,save_user,set_category,get_categories
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from google.auth.transport.requests import Request
 
+
+DEFAULT_CATEGORIES = ["Groceries","Take out & restaurants","Going out","Clothing","Electronics","Home essentials","Medicine","Gifts","Transportation","Other"]
 
 
 def duplicate_template_tab(request_json,new_sheet_name,sheets_service,sheet_id,user_id):
@@ -148,6 +150,8 @@ def get_user_credentials(user_id) :
 
     return user_credentials
 
+
+
 def get_user_sheets_service(user_id):
     creds = get_user_credentials(user_id)
     return build('sheets', version='v4', credentials=creds)
@@ -172,7 +176,33 @@ def create_user_sheet(template_file_id, user_email, user_drive_service):
     ).execute()
     return copied_file['id']
 
+def seed_default_categories(user_id):
+    for category in DEFAULT_CATEGORIES:
+        set_category(user_id, category)
+    
+    
+
 def save_user_sheet(user_id,sheet_id):
     set_user_sheet(user_id,sheet_id)
 
+def sync_categories_to_sheet(user_id, sheets_service, sheet_id):
+    categories = get_categories(user_id)
 
+    
+    clear_values = [[""] for _ in range(17, 57)]  # 40 rows, T17 to T56
+    sheets_service.spreadsheets().values().update(
+        spreadsheetId=sheet_id,
+        range="Budget I!T17:T56",
+        valueInputOption="USER_ENTERED",
+        body={"values": clear_values}
+    ).execute()
+
+    
+    rows = [[cat] for cat in categories]
+    if rows:
+        sheets_service.spreadsheets().values().update(
+            spreadsheetId=sheet_id,
+            range=f"Budget I!T17:T{17 + len(rows) - 1}",
+            valueInputOption="USER_ENTERED",
+            body={"values": rows}
+        ).execute()
