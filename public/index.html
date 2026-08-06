@@ -236,6 +236,19 @@
     font-weight: 600;
   }
 
+  .signout-link {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-soft);
+    text-decoration: none;
+    border-bottom: 1px dashed var(--rule);
+    padding-bottom: 1px;
+  }
+  .signout-link:hover {
+    color: var(--alert);
+    border-bottom-color: var(--alert);
+  }
+
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; }
   }
@@ -302,6 +315,12 @@
 
       <img id="preview" alt="Receipt preview">
       <div class="status-line" id="status"></div>
+    </div>
+
+    <div class="perf" aria-hidden="true"></div>
+
+    <div class="ticket" style="text-align:center; padding: 16px 24px;">
+      <a class="signout-link" href="/logout">Sign out</a>
     </div>
 
   </div>
