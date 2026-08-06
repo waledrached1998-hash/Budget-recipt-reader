@@ -2,10 +2,10 @@ import config as c
 from flask import session
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-from db import get_current_tab as db_get_current_tab, get_sheet_id, get_user, set_current_tab,get_current_tab_valid_until,set_user_sheet
+from db import get_current_tab as db_get_current_tab, get_sheet_id, get_user, set_current_tab,get_current_tab_valid_until,set_user_sheet,save_user
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
-
+from google.auth.transport.requests import Request
 
 
 
@@ -142,6 +142,10 @@ def get_user_credentials(user_id) :
         client_id=c.GOOGLE_CLIENT_ID ,
         client_secret=c.GOOGLE_CLIENT_SECRET,
     )
+    if user_credentials.expired and user_credentials.refresh_token:
+        user_credentials.refresh(Request())
+        save_user(user_id, user['email'], user_credentials.token, user_credentials.refresh_token, user_credentials.expiry.isoformat())
+
     return user_credentials
 
 def get_user_sheets_service(user_id):
