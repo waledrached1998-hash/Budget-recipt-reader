@@ -167,6 +167,18 @@
     margin-bottom: 8px;
   }
   .field-row:last-child { margin-bottom: 0; }
+  .field-row .remove-row {
+    grid-column: 1 / -1;
+    background: none;
+    border: none;
+    color: var(--alert);
+    font-family: var(--mono);
+    font-size: 11px;
+    text-align: left;
+    padding: 2px 0 6px;
+    cursor: pointer;
+    width: auto;
+  }
 
   button {
     width: 100%;
@@ -249,6 +261,24 @@
     border-bottom-color: var(--alert);
   }
 
+  /* --- Review step --- */
+  #reviewSection { display: none; }
+  .review-hint {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-bottom: 14px;
+    line-height: 1.5;
+  }
+  .review-totals {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-soft);
+    text-align: right;
+    margin: -4px 0 12px;
+  }
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .btn-row .btn-primary, .btn-row .btn-ghost { width: auto; }
+
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; }
   }
@@ -305,7 +335,7 @@
         <span class="tag">§ 02</span>
       </div>
 
-      <div class="btn-stack">
+      <div class="btn-stack" id="scanButtons">
         <button class="btn-ghost" onclick="document.getElementById('cameraInput').click()">📷 Take Photo</button>
         <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none">
 
@@ -315,6 +345,34 @@
 
       <img id="preview" alt="Receipt preview">
       <div class="status-line" id="status"></div>
+
+      <div id="reviewSection">
+        <div class="review-hint">Check the details below before saving to your ledger.</div>
+
+        <div class="field-group">
+          <label class="field" for="reviewStore">Store</label>
+          <input type="text" id="reviewStore">
+        </div>
+
+        <div class="field-group">
+          <label class="field" for="reviewDate">Date</label>
+          <input type="date" id="reviewDate">
+        </div>
+
+        <fieldset>
+          <legend>Items</legend>
+          <div id="reviewItems"></div>
+          <button type="button" class="btn-secondary" onclick="addReviewItem('', '')">+ Add category</button>
+        </fieldset>
+
+        <div class="review-totals" id="reviewTotal"></div>
+
+        <div class="btn-row">
+          <button class="btn-ghost" onclick="cancelReview()">Cancel</button>
+          <button class="btn-primary" onclick="confirmReceipt()">Confirm &amp; Save</button>
+        </div>
+        <div class="status-line" id="confirmStatus"></div>
+      </div>
     </div>
 
     <div class="perf" aria-hidden="true"></div>
@@ -412,6 +470,11 @@
   const galleryInput = document.getElementById('galleryInput');
   const preview = document.getElementById('preview');
   const status = document.getElementById('status');
+  const scanButtons = document.getElementById('scanButtons');
+  const reviewSection = document.getElementById('reviewSection');
+  const reviewItems = document.getElementById('reviewItems');
+  const reviewTotal = document.getElementById('reviewTotal');
+  const confirmStatus = document.getElementById('confirmStatus');
 
   function handleFile(file) {
     if (!file) return;
@@ -427,9 +490,9 @@
     fetch('/scan-receipt', { method: 'POST', body: formData })
       .then(res => res.json())
       .then(data => {
-        if (data.status === 'received') {
-          status.textContent = 'Logged to ledger.';
-          status.className = 'status-line success';
+        if (data.status === 'parsed' && data.data) {
+          status.textContent = '';
+          showReview(data.data);
         } else {
           status.textContent = data.error || 'Could not read receipt.';
           status.className = 'status-line error';
@@ -443,6 +506,123 @@
 
   cameraInput.addEventListener('change', () => handleFile(cameraInput.files[0]));
   galleryInput.addEventListener('change', () => handleFile(galleryInput.files[0]));
+
+  function showReview(data) {
+    document.getElementById('reviewStore').value = data.store_name || '';
+    document.getElementById('reviewDate').value = data.date || '';
+
+    reviewItems.innerHTML = '';
+    const items = data.items || {};
+    Object.keys(items).forEach(category => {
+      addReviewItem(category, items[category]);
+    });
+
+    updateReviewTotal();
+    scanButtons.style.display = 'none';
+    reviewSection.style.display = 'block';
+    confirmStatus.textContent = '';
+  }
+
+  function addReviewItem(category, amount) {
+    const row = document.createElement('div');
+    row.className = 'field-row';
+
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.placeholder = 'Category';
+    nameInput.className = 'review-item-name';
+    nameInput.value = category;
+
+    const amountInput = document.createElement('input');
+    amountInput.type = 'number';
+    amountInput.placeholder = 'Amount';
+    amountInput.className = 'review-item-amount';
+    amountInput.value = amount;
+    amountInput.addEventListener('input', updateReviewTotal);
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'remove-row';
+    removeBtn.textContent = '× remove';
+    removeBtn.addEventListener('click', () => {
+      row.remove();
+      updateReviewTotal();
+    });
+
+    row.appendChild(nameInput);
+    row.appendChild(amountInput);
+    row.appendChild(removeBtn);
+    reviewItems.appendChild(row);
+  }
+
+  function updateReviewTotal() {
+    const amounts = document.querySelectorAll('.review-item-amount');
+    let total = 0;
+    amounts.forEach(input => {
+      const val = parseFloat(input.value);
+      if (!isNaN(val)) total += val;
+    });
+    reviewTotal.textContent = 'Total: ' + total.toFixed(2);
+  }
+
+  function collectReviewItems() {
+    const names = document.querySelectorAll('.review-item-name');
+    const amounts = document.querySelectorAll('.review-item-amount');
+    const items = {};
+    for (let i = 0; i < names.length; i++) {
+      const name = names[i].value.trim();
+      const amount = parseFloat(amounts[i].value);
+      if (name && !isNaN(amount)) items[name] = amount;
+    }
+    return items;
+  }
+
+  function cancelReview() {
+    reviewSection.style.display = 'none';
+    scanButtons.style.display = 'block';
+    preview.style.display = 'none';
+    status.textContent = '';
+    cameraInput.value = '';
+    galleryInput.value = '';
+  }
+
+  function confirmReceipt() {
+    const payload = {
+      store_name: document.getElementById('reviewStore').value.trim(),
+      date: document.getElementById('reviewDate').value,
+      items: collectReviewItems(),
+    };
+
+    confirmStatus.textContent = 'Saving…';
+    confirmStatus.className = 'status-line';
+
+    fetch('/confirm-receipt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'received') {
+          confirmStatus.textContent = 'Logged to ledger.';
+          confirmStatus.className = 'status-line success';
+          setTimeout(() => {
+            reviewSection.style.display = 'none';
+            scanButtons.style.display = 'block';
+            preview.style.display = 'none';
+            cameraInput.value = '';
+            galleryInput.value = '';
+          }, 900);
+        } else {
+          confirmStatus.textContent = data.error || 'Could not save.';
+          confirmStatus.className = 'status-line error';
+        }
+      })
+      .catch(err => {
+        confirmStatus.textContent = 'Error: ' + err.message;
+        confirmStatus.className = 'status-line error';
+      });
+  }
 </script>
 </body>
 </html>

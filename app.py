@@ -83,6 +83,16 @@ def new_month():
 @app.route('/scan-receipt', methods=["POST"])
 @login_required
 def scan_receipt():
+    
+
+    file = request.files['receipt']
+    parsed = cc.scan_receipt_image(file)
+    
+    return {"status": "parsed", "data": parsed}
+
+@app.route('/confirm-receipt', methods=["POST"])
+@login_required
+def confirm_receipt():
     user_id = session['user_id']
     sheet_id = s.get_user_sheet_id(user_id)
     tab_name = s.get_current_tab(user_id,sheet_id)
@@ -90,11 +100,10 @@ def scan_receipt():
     if tab_name is None:
         return {"error": "No active month found. Please create a new month first."}, 400
     
-    file = request.files['receipt']
-    parsed = cc.scan_receipt_image(file)
+    parsed = request.json
+
     s.write_expenses(parsed, tab_name,sheets_service,sheet_id)
     return {"status": "received"}
-
 
 
 if __name__ == '__main__':
