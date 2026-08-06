@@ -37,7 +37,7 @@ def duplicate_template_tab(request_json,new_sheet_name,sheets_service,sheet_id,u
 def write_income(request_json, sheet_tab,sheets_service,sheet_id):
     income_result = sheets_service.spreadsheets().values().get(
         spreadsheetId=sheet_id,
-        range=f"{sheet_tab}!D27:D37"
+        range=f"{sheet_tab}!E27:E37"
     ).execute()
     values = income_result.get('values', [])
     current_income_row = 27 + len(values)
@@ -45,7 +45,7 @@ def write_income(request_json, sheet_tab,sheets_service,sheet_id):
         body = {
             "valueInputOption": "USER_ENTERED",
             "data": [
-                {"range": f"{sheet_tab}!D{current_income_row}", "values": [[entry['name']]]},
+                {"range": f"{sheet_tab}!E{current_income_row}", "values": [[entry['name']]]},
                 {"range": f"{sheet_tab}!G{current_income_row}", "values": [[entry['amount']]]},
                 {"range": f"{sheet_tab}!J{current_income_row}", "values": [[entry['amount']]]}
             ]
@@ -56,7 +56,7 @@ def write_income(request_json, sheet_tab,sheets_service,sheet_id):
 def write_savings(request_json, sheet_tab,sheets_service,sheet_id):
     income_result = sheets_service.spreadsheets().values().get(
         spreadsheetId=sheet_id,
-        range=f"{sheet_tab}!D42:D57"
+        range=f"{sheet_tab}!E42:E57"
     ).execute()
     values = income_result.get('values', [])
     current_savings_row = 42 + len(values)
@@ -64,7 +64,7 @@ def write_savings(request_json, sheet_tab,sheets_service,sheet_id):
         body = {
             "valueInputOption": "USER_ENTERED",
             "data": [
-                {"range": f"{sheet_tab}!D{current_savings_row}", "values": [[entry['name']]]},
+                {"range": f"{sheet_tab}!E{current_savings_row}", "values": [[entry['name']]]},
                 {"range": f"{sheet_tab}!G{current_savings_row}", "values": [[entry['amount']]]},
                 {"range": f"{sheet_tab}!J{current_savings_row}", "values": [[entry['amount']]]}
             ]
