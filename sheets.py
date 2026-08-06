@@ -45,7 +45,7 @@ def write_income(request_json, sheet_tab,sheets_service,sheet_id):
         body = {
             "valueInputOption": "USER_ENTERED",
             "data": [
-                {"range": f"{sheet_tab}!E{current_income_row}", "values": [[entry['name']]]},
+                {"range": f"{sheet_tab}!D{current_income_row}:E{current_income_row}", "values": [[entry['name']]]},
                 {"range": f"{sheet_tab}!G{current_income_row}", "values": [[entry['amount']]]},
                 {"range": f"{sheet_tab}!J{current_income_row}", "values": [[entry['amount']]]}
             ]
@@ -64,7 +64,7 @@ def write_savings(request_json, sheet_tab,sheets_service,sheet_id):
         body = {
             "valueInputOption": "USER_ENTERED",
             "data": [
-                {"range": f"{sheet_tab}!E{current_savings_row}", "values": [[entry['name']]]},
+                {"range": f"{sheet_tab}!D{current_savings_row}:E{current_savings_row}", "values": [[entry['name']]]},
                 {"range": f"{sheet_tab}!G{current_savings_row}", "values": [[entry['amount']]]},
                 {"range": f"{sheet_tab}!J{current_savings_row}", "values": [[entry['amount']]]}
             ]
