@@ -118,6 +118,16 @@ def confirm_receipt():
     s.write_expenses(parsed, tab_name,sheets_service,sheet_id)
     return {"status": "received"}
 
+@app.route('/my-sheet-url')
+@login_required
+def my_sheet_url():
+    user_id = session['user_id']
+    sheet_id = s.get_user_sheet_id(user_id)
+
+    if sheet_id is None :
+        return {"error": "No active sheet found."}, 400
+
+    return {"url": f"https://docs.google.com/spreadsheets/d/{sheet_id}"}
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000, debug=True)
