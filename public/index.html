@@ -82,6 +82,11 @@
   .review-totals { font-family: var(--mono); font-size: 11px; color: var(--ink-soft); text-align: right; margin: -4px 0 12px; }
   .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .btn-row .btn-primary, .btn-row .btn-ghost { width: auto; }
+  #noCycleMessage {
+    display: none;
+    text-align: center;
+    padding: 8px 4px;
+  }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
@@ -142,6 +147,10 @@
 
         <button class="btn-ghost" onclick="document.getElementById('galleryInput').click()">🖼 Upload Image</button>
         <input type="file" id="galleryInput" accept="image/*" style="display:none">
+      </div>
+
+      <div class="review-hint" id="noCycleMessage">
+        No active cycle right now. Open a new cycle above before logging a receipt.
       </div>
 
       <img id="preview" alt="Receipt preview">
@@ -247,6 +256,8 @@
           monthStatus.textContent = 'Cycle opened.';
           monthStatus.className = 'status-line success';
           document.getElementById('newMonthSection').style.display = 'none';
+          document.getElementById('scanButtons').style.display = 'block';
+          document.getElementById('noCycleMessage').style.display = 'none';
         } else {
           monthStatus.textContent = data.status || data.error || 'Could not open cycle.';
           monthStatus.className = 'status-line error';
@@ -276,6 +287,16 @@
         }
       })
       .catch(err => console.error('Could not load sheet link:', err));
+
+    fetch('/cycle-status')
+      .then(res => res.json())
+      .then(data => {
+        if (!data.active) {
+          document.getElementById('scanButtons').style.display = 'none';
+          document.getElementById('noCycleMessage').style.display = 'block';
+        }
+      })
+      .catch(err => console.error('Could not check cycle status:', err));
   });
 
   const cameraInput = document.getElementById('cameraInput');

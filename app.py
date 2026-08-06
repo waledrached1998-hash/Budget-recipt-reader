@@ -129,5 +129,17 @@ def my_sheet_url():
 
     return {"url": f"https://docs.google.com/spreadsheets/d/{sheet_id}"}
 
+
+@app.route('/cycle-status')
+@login_required
+def cycle_status():
+    user_id = session['user_id']
+    sheet_id = s.get_user_sheet_id(user_id)
+    if sheet_id is None :
+            return {"error": "No active sheet found."}, 400
+    
+    is_active = s.get_current_tab_still_valid(user_id,sheet_id)
+    
+    return {"active": is_active}
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000, debug=True)
