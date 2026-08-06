@@ -146,7 +146,7 @@ def get_user_credentials(user_id) :
 
 def get_user_sheets_service(user_id):
     creds = get_user_credentials(user_id)
-    return build('sheets', version='v3', credentials=creds)
+    return build('sheets', version='v4', credentials=creds)
 
 def get_user_drive_service(user_id):
     creds = get_user_credentials(user_id)
