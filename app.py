@@ -19,6 +19,19 @@ def login_required(f):
         return f(*args, **kwargs)
     return wrapper
 
+
+@app.route('/manifest.json')
+def manifest():
+    return send_from_directory('public', 'manifest.json', mimetype='application/manifest+json')
+
+@app.route('/sw.js')
+def service_worker():
+    return send_from_directory('public', 'sw.js', mimetype='application/javascript')
+
+@app.route('/icons/<path:filename>')
+def icons(filename):
+    return send_from_directory('public/icons', filename)
+
 @app.route('/')
 def hello():
     if 'user_id' not in session:
@@ -139,7 +152,7 @@ def cycle_status():
             return {"error": "No active sheet found."}, 400
     
     is_active = s.get_current_tab_still_valid(user_id,sheet_id)
-    
+
     return {"active": is_active}
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000, debug=True)
