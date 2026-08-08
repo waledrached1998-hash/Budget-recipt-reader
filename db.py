@@ -144,7 +144,7 @@ def set_category(user_id,category):
 def delete_category(user_id, category):
     conn = sqlite3.connect(DB_PATH)
     conn.execute('''
-        DELETE user_categories WHERE user_id = ? AND category = ?
+        DELETE FROM user_categories WHERE user_id = ? AND category = ?
     ''', (user_id, category))
     conn.commit()
     conn.close()
