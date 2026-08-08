@@ -185,24 +185,31 @@ def seed_default_categories(user_id):
 def save_user_sheet(user_id,sheet_id):
     set_user_sheet(user_id,sheet_id)
 
-def sync_categories_to_sheet(user_id, sheets_service, sheet_id):
-    categories = get_categories(user_id)
-
+def write_categories_to_tab (tab_name,sheets_service,categories,sheet_id):
     
     clear_values = [[""] for _ in range(17, 57)]  # 40 rows, T17 to T56
     sheets_service.spreadsheets().values().update(
         spreadsheetId=sheet_id,
-        range="Budget I!T17:T56",
+        range=f"{tab_name}!T17:T56",
         valueInputOption="USER_ENTERED",
         body={"values": clear_values}
     ).execute()
 
-    
     rows = [[cat] for cat in categories]
     if rows:
         sheets_service.spreadsheets().values().update(
             spreadsheetId=sheet_id,
-            range=f"Budget I!T17:T{17 + len(rows) - 1}",
+            range=f"{tab_name}!T17:T{17 + len(rows) - 1}",
             valueInputOption="USER_ENTERED",
             body={"values": rows}
         ).execute()
+
+
+def sync_categories_to_sheet(user_id, sheets_service, sheet_id):
+    categories = get_categories(user_id)
+    write_categories_to_tab('Budget I',sheets_service,categories,sheet_id)
+    current_tab = get_current_tab(user_id, sheet_id)
+    if current_tab is not None :
+        write_categories_to_tab(current_tab,sheets_service,categories,sheet_id)
+
+
