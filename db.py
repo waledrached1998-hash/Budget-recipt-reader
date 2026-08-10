@@ -30,7 +30,7 @@ def init_db():
         )
     ''')
     conn.execute('''
-        CREATE TABLE user_bills (
+        CREATE TABLE IF NOT EXISTS user_bills (
             user_id TEXT,
             bill_name TEXT,
             amount REAL,
