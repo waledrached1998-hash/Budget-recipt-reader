@@ -3,115 +3,199 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ledger — Budget Tracker</title>
+<title>Ledger</title>
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#2F6B4F">
+<meta name="theme-color" content="#6552F5">
 <link rel="icon" href="/icons/icon-192.png">
 <link rel="apple-touch-icon" href="/icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --paper: #FAF7F0;
-    --paper-dim: #F1ECE0;
-    --ink: #1C2321;
-    --ink-soft: #4A524F;
-    --accent: #2F6B4F;
-    --accent-soft: #D9E8DE;
-    --rule: #D8D2C4;
-    --alert: #B23A2E;
-    --alert-soft: #F3DEDB;
-    --radius: 3px;
-    --mono: 'IBM Plex Mono', monospace;
+    --bg: #F6F5FA;
+    --card: #FFFFFF;
+    --ink: #16161F;
+    --ink-soft: #6E6E85;
+    --accent: #6552F5;
+    --accent-soft: #EDE9FE;
+    --accent-2: #12B886;
+    --accent-2-soft: #E1F7EE;
+    --accent-3: #FF8A5B;
+    --accent-3-soft: #FFEEE5;
+    --line: #EDEDF3;
+    --alert: #E5484D;
+    --alert-soft: #FDE7E8;
+    --radius: 20px;
+    --radius-sm: 12px;
+    --display: 'Sora', sans-serif;
     --sans: 'Inter', sans-serif;
   }
+
   * { box-sizing: border-box; }
+
   body {
-    margin: 0; background: var(--paper-dim); color: var(--ink);
-    font-family: var(--sans); min-height: 100vh; display: flex;
-    justify-content: center; padding: 32px 16px 80px; -webkit-font-smoothing: antialiased;
+    margin: 0;
+    background: var(--bg);
+    background-image:
+      radial-gradient(circle at 12% -6%, rgba(101,82,245,0.14), transparent 42%),
+      radial-gradient(circle at 100% 10%, rgba(18,184,134,0.10), transparent 40%);
+    color: var(--ink);
+    font-family: var(--sans);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 22px 14px 80px;
+    -webkit-font-smoothing: antialiased;
   }
-  .receipt {
-    width: 100%; max-width: 420px; background: var(--paper);
-    box-shadow: 0 1px 2px rgba(28,35,33,0.06), 0 8px 24px rgba(28,35,33,0.08);
-    border-radius: var(--radius); overflow: hidden;
+
+  .app {
+    width: 100%;
+    max-width: 430px;
   }
-  .masthead { padding: 28px 24px 20px; text-align: center; border-bottom: 1px dashed var(--rule); }
-  .masthead .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
-  .masthead h1 { font-family: var(--mono); font-size: 24px; font-weight: 700; letter-spacing: -0.01em; margin: 6px 0 4px; }
-  .masthead .sub { font-size: 13px; color: var(--ink-soft); }
-  .ticket { padding: 22px 24px; }
-  .ticket + .ticket { border-top: 1px dashed var(--rule); }
-  .ticket-label { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
-  .ticket-label h2 { font-family: var(--mono); font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink); margin: 0; }
-  .ticket-label .tag { font-family: var(--mono); font-size: 11px; color: var(--ink-soft); }
-  .perf { position: relative; height: 18px; background: radial-gradient(circle at 8px 0, transparent 7px, var(--paper) 7px) top / 16px 16px repeat-x, var(--paper-dim); margin: 0; }
-  .perf::before, .perf::after { content: ""; position: absolute; left: 0; right: 0; height: 9px; background: radial-gradient(circle at 8px 0, transparent 7px, var(--paper) 7px) top / 16px 16px repeat-x; }
-  .perf::before { top: 0; }
-  .perf::after { bottom: 0; transform: rotate(180deg); }
-  label.field { display: block; font-size: 12px; color: var(--ink-soft); margin-bottom: 4px; font-weight: 500; }
-  .field-group { margin-bottom: 14px; }
+
+  .hero {
+    padding: 6px 4px 22px;
+  }
+  .hero .eyebrow {
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--ink-soft);
+    font-weight: 500;
+  }
+  .hero h1 {
+    font-family: var(--display);
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 3px 0 0;
+    color: var(--ink);
+  }
+
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 2px rgba(22,22,31,0.04), 0 12px 28px -14px rgba(22,22,31,0.14);
+  }
+
+  .card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .icon-badge {
+    width: 42px; height: 42px; border-radius: 13px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 19px; flex-shrink: 0;
+  }
+  .icon-badge.violet { background: var(--accent-soft); }
+  .icon-badge.mint { background: var(--accent-2-soft); }
+  .card-head-col { display: flex; flex-direction: column; }
+  .card-head h2 {
+    font-family: var(--display); font-size: 16.5px; font-weight: 700; color: var(--ink); margin: 0;
+  }
+  .card-head .card-note { font-size: 12px; color: var(--ink-soft); margin-top: 1px; }
+
+  label.field {
+    display: block; font-size: 12px; font-weight: 500; color: var(--ink-soft); margin-bottom: 5px;
+  }
+  .field-group { margin-bottom: 13px; }
   .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
   input[type="text"], input[type="number"], input[type="date"], select {
-    width: 100%; padding: 10px 12px; border: 1px solid var(--rule); border-radius: var(--radius);
-    background: var(--paper); font-family: var(--sans); font-size: 14px; color: var(--ink);
-    transition: border-color 0.15s ease;
+    width: 100%; padding: 11px 13px; border: 1.5px solid var(--line); border-radius: var(--radius-sm);
+    background: #FBFBFD; font-family: var(--sans); font-size: 14.5px; color: var(--ink);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
-  select { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%234A524F'/></svg>"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
-  input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
-  fieldset { border: 1px solid var(--rule); border-radius: var(--radius); padding: 12px 12px 14px; margin: 0 0 14px; }
-  legend { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); padding: 0 6px; }
+  select {
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%236E6E85'/></svg>");
+    background-repeat: no-repeat; background-position: right 13px center; padding-right: 34px;
+  }
+  input:focus-visible, select:focus-visible {
+    outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft);
+  }
+
+  fieldset { border: 1.5px solid var(--line); border-radius: var(--radius-sm); padding: 13px 13px 15px; margin: 0 0 13px; }
+  legend {
+    font-family: var(--display); font-size: 11.5px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--ink-soft); padding: 0 6px;
+  }
+
   .field-row { display: grid; grid-template-columns: 1.4fr 1fr; gap: 8px; margin-bottom: 8px; }
   .field-row:last-child { margin-bottom: 0; }
-  .field-row .remove-row { grid-column: 1 / -1; background: none; border: none; color: var(--alert); font-family: var(--mono); font-size: 11px; text-align: left; padding: 2px 0 6px; cursor: pointer; width: auto; }
-  button { width: 100%; padding: 13px 16px; border-radius: var(--radius); border: none; font-family: var(--mono); font-size: 13px; font-weight: 600; letter-spacing: 0.02em; cursor: pointer; transition: transform 0.08s ease, opacity 0.15s ease; }
-  button:active { transform: scale(0.98); }
-  .btn-primary { background: var(--ink); color: var(--paper); }
-  .btn-primary:hover { opacity: 0.88; }
-  .btn-secondary { background: transparent; color: var(--accent); border: 1px dashed var(--accent); font-size: 12px; padding: 9px 12px; }
-  .btn-secondary:hover { background: var(--accent-soft); }
-  .btn-ghost { background: var(--paper-dim); color: var(--ink); border: 1px solid var(--rule); }
-  .btn-ghost:hover { background: var(--rule); }
-  .btn-stack > * + * { margin-top: 10px; }
-  .status-line { margin-top: 12px; font-family: var(--mono); font-size: 12px; text-align: center; min-height: 16px; color: var(--ink-soft); }
-  .status-line.success { color: var(--accent); }
+  .field-row .remove-row {
+    grid-column: 1 / -1; background: none; border: none; color: var(--alert);
+    font-size: 12px; font-weight: 500; text-align: left; padding: 2px 0 6px; cursor: pointer; width: auto;
+  }
+
+  button {
+    width: 100%; padding: 14px 18px; border-radius: 999px; border: none;
+    font-family: var(--display); font-size: 14.5px; font-weight: 700; letter-spacing: -0.005em;
+    cursor: pointer; transition: transform 0.08s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+  }
+  button:active { transform: scale(0.97); }
+
+  .btn-primary { background: var(--accent); color: #fff; box-shadow: 0 8px 20px -8px rgba(101,82,245,0.55); }
+  .btn-primary:hover { opacity: 0.92; }
+
+  .btn-secondary {
+    background: var(--accent-soft); color: var(--accent); font-size: 13px; padding: 10px 14px; border-radius: var(--radius-sm);
+  }
+  .btn-secondary:hover { background: #E3DDFC; }
+
+  .btn-ghost { background: #F3F3F8; color: var(--ink); border: 1.5px solid var(--line); border-radius: var(--radius-sm); }
+  .btn-ghost:hover { background: #EBEBF1; }
+
+  .btn-stack > * + * { margin-top: 9px; }
+
+  .status-line { margin-top: 12px; font-size: 12.5px; text-align: center; min-height: 16px; color: var(--ink-soft); font-weight: 500; }
+  .status-line.success { color: var(--accent-2); }
   .status-line.error { color: var(--alert); }
-  #preview { display: none; width: 100%; border-radius: var(--radius); margin-top: 12px; border: 1px solid var(--rule); }
-  .pill { display: inline-block; font-family: var(--mono); font-size: 11px; padding: 4px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 600; }
-  .signout-link { font-family: var(--mono); font-size: 12px; color: var(--ink-soft); text-decoration: none; border-bottom: 1px dashed var(--rule); padding-bottom: 1px; }
-  .signout-link:hover { color: var(--alert); border-bottom-color: var(--alert); }
-  #mySheetLink:hover { color: var(--accent); border-bottom-color: var(--accent); }
-  #settingsLink { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:50%; color: var(--ink-soft); text-decoration:none; transition: color 0.15s ease, background 0.15s ease; }
+
+  #preview { display: none; width: 100%; border-radius: var(--radius-sm); margin-top: 12px; border: 1.5px solid var(--line); }
+
+  .footer-row { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 6px 4px 0; }
+  .footer-link {
+    font-size: 12.5px; font-weight: 500; color: var(--ink-soft);
+    text-decoration: none;
+  }
+  .footer-link:hover { color: var(--accent); }
+  #settingsLink {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; border-radius: 50%; color: var(--ink-soft);
+    text-decoration: none; transition: color 0.15s ease, background 0.15s ease;
+  }
   #settingsLink:hover { color: var(--accent); background: var(--accent-soft); }
-  .footer-links { display:flex; align-items:center; justify-content:center; gap:12px; }
-  .link-sep { color: var(--rule); margin: 0 8px; }
+  .link-sep { color: var(--line); }
+
   #reviewSection, #manualSection { display: none; }
-  .review-hint { font-size: 12px; color: var(--ink-soft); margin-bottom: 14px; line-height: 1.5; }
-  .review-totals { font-family: var(--mono); font-size: 11px; color: var(--ink-soft); text-align: right; margin: -4px 0 12px; }
+  .review-hint { font-size: 12.5px; color: var(--ink-soft); margin-bottom: 14px; line-height: 1.5; }
+  .review-totals { font-family: var(--display); font-weight: 700; font-size: 13px; color: var(--ink); text-align: right; margin: -2px 0 12px; }
   .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .btn-row .btn-primary, .btn-row .btn-ghost { width: auto; }
+
   #noCycleMessage {
-    display: none;
-    text-align: center;
-    padding: 8px 4px;
+    display: none; text-align: center; padding: 11px 14px;
+    background: var(--accent-3-soft); border-radius: var(--radius-sm); color: var(--accent-3); font-size: 12.5px; font-weight: 500;
   }
+
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
 
-  <div class="receipt">
+  <div class="app">
 
-    <div class="masthead">
-      <div class="eyebrow">Personal Ledger</div>
-      <h1>Budget Slip</h1>
-      <div class="sub">Scan it. Log it. Balance it.</div>
+    <div class="hero">
+      <div class="eyebrow">Good to see you</div>
+      <h1>Your Ledger</h1>
     </div>
 
-    <div class="ticket" id="newMonthSection">
-      <div class="ticket-label">
-        <h2>New Cycle</h2>
-        <span class="tag">§ 01</span>
+    <div class="card" id="newMonthSection">
+      <div class="card-head">
+        <div class="icon-badge violet">🗓️</div>
+        <div class="card-head-col">
+          <h2>New Cycle</h2>
+          <div class="card-note">Set the period, income, and savings.</div>
+        </div>
       </div>
 
       <div class="field-group row-2">
@@ -141,12 +225,13 @@
       <div class="status-line" id="monthStatus"></div>
     </div>
 
-    <div class="perf" aria-hidden="true"></div>
-
-    <div class="ticket" id="scanSection">
-      <div class="ticket-label">
-        <h2>Log a Receipt</h2>
-        <span class="tag">§ 02</span>
+    <div class="card" id="scanSection">
+      <div class="card-head">
+        <div class="icon-badge mint">🧾</div>
+        <div class="card-head-col">
+          <h2>Log a Receipt</h2>
+          <div class="card-note">Photograph, upload, or add by hand.</div>
+        </div>
       </div>
 
       <div class="btn-stack" id="scanButtons">
@@ -166,7 +251,6 @@
       <img id="preview" alt="Receipt preview">
       <div class="status-line" id="status"></div>
 
-      <!-- Manual entry form -->
       <div id="manualSection">
         <div class="review-hint">Add a single expense directly, no photo needed.</div>
 
@@ -227,19 +311,17 @@
       </div>
     </div>
 
-    <div class="perf" aria-hidden="true"></div>
-
-    <div class="ticket footer-links" style="padding: 16px 24px;">
+    <div class="footer-row">
       <a href="/settings" id="settingsLink" title="Settings">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="3"></circle>
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
         </svg>
       </a>
       <span class="link-sep">·</span>
-      <a class="signout-link" href="#" id="mySheetLink" target="_blank" rel="noopener">Open my sheet</a>
+      <a class="footer-link" href="#" id="mySheetLink" target="_blank" rel="noopener">Open my sheet</a>
       <span class="link-sep">·</span>
-      <a class="signout-link" href="/logout">Sign out</a>
+      <a class="footer-link" href="/logout">Sign out</a>
     </div>
 
   </div>
@@ -510,7 +592,6 @@
       });
   }
 
-  // ---------- Manual expense entry ----------
   const manualSection = document.getElementById('manualSection');
   const manualCategory = document.getElementById('manualCategory');
   const manualStatus = document.getElementById('manualStatus');

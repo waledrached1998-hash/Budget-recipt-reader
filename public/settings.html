@@ -3,134 +3,132 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Slipnote — Settings</title>
+<title>Ledger — Settings</title>
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#2F6B4F">
+<meta name="theme-color" content="#6552F5">
 <link rel="icon" href="/icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --paper: #FAF7F0;
-    --paper-dim: #F1ECE0;
-    --ink: #1C2321;
-    --ink-soft: #4A524F;
-    --accent: #2F6B4F;
-    --accent-soft: #D9E8DE;
-    --rule: #D8D2C4;
-    --alert: #B23A2E;
-    --alert-soft: #F3DEDB;
-    --radius: 3px;
-    --mono: 'IBM Plex Mono', monospace;
+    --bg: #F6F5FA;
+    --card: #FFFFFF;
+    --ink: #16161F;
+    --ink-soft: #6E6E85;
+    --accent: #6552F5;
+    --accent-soft: #EDE9FE;
+    --accent-2: #12B886;
+    --accent-2-soft: #E1F7EE;
+    --line: #EDEDF3;
+    --alert: #E5484D;
+    --alert-soft: #FDE7E8;
+    --radius: 20px;
+    --radius-sm: 12px;
+    --display: 'Sora', sans-serif;
     --sans: 'Inter', sans-serif;
   }
   * { box-sizing: border-box; }
   body {
-    margin: 0; background: var(--paper-dim); color: var(--ink);
-    font-family: var(--sans); min-height: 100vh; display: flex;
-    justify-content: center; padding: 32px 16px 80px; -webkit-font-smoothing: antialiased;
+    margin: 0; background: var(--bg);
+    background-image:
+      radial-gradient(circle at 12% -6%, rgba(101,82,245,0.14), transparent 42%),
+      radial-gradient(circle at 100% 10%, rgba(18,184,134,0.10), transparent 40%);
+    color: var(--ink); font-family: var(--sans);
+    min-height: 100vh; display: flex; justify-content: center;
+    padding: 22px 14px 80px; -webkit-font-smoothing: antialiased;
   }
-  .receipt {
-    width: 100%; max-width: 420px; background: var(--paper);
-    box-shadow: 0 1px 2px rgba(28,35,33,0.06), 0 8px 24px rgba(28,35,33,0.08);
-    border-radius: var(--radius); overflow: hidden;
-  }
-  .masthead { padding: 24px 24px 18px; text-align: center; border-bottom: 1px dashed var(--rule); position: relative; }
+
+  .app { width: 100%; max-width: 430px; }
+
+  .hero { padding: 6px 4px 20px; position: relative; }
   .back-link {
-    position: absolute; left: 20px; top: 24px;
-    font-family: var(--mono); font-size: 12px; color: var(--ink-soft);
-    text-decoration: none; border-bottom: 1px dashed var(--rule); padding-bottom: 1px;
+    position: absolute; left: 0; top: 6px;
+    font-size: 13px; font-weight: 500; color: var(--ink-soft); text-decoration: none;
   }
-  .back-link:hover { color: var(--accent); border-bottom-color: var(--accent); }
-  .masthead .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
-  .masthead h1 { font-family: var(--mono); font-size: 22px; font-weight: 700; letter-spacing: -0.01em; margin: 6px 0 4px; }
-  .masthead .sub { font-size: 13px; color: var(--ink-soft); }
-  .ticket { padding: 22px 24px; }
-  .ticket + .ticket { border-top: 1px dashed var(--rule); }
-  .ticket-label { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
-  .ticket-label h2 { font-family: var(--mono); font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink); margin: 0; }
-  .ticket-label .tag { font-family: var(--mono); font-size: 11px; color: var(--ink-soft); }
+  .back-link:hover { color: var(--accent); }
+  .hero h1 {
+    font-family: var(--display); font-size: 28px; font-weight: 700;
+    letter-spacing: -0.02em; margin: 26px 0 2px; color: var(--ink);
+  }
+  .hero .sub { font-size: 13px; color: var(--ink-soft); }
 
-  .category-row {
+  .card {
+    background: var(--card); border-radius: var(--radius); padding: 20px; margin-bottom: 14px;
+    box-shadow: 0 1px 2px rgba(22,22,31,0.04), 0 12px 28px -14px rgba(22,22,31,0.14);
+  }
+  .card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .icon-badge {
+    width: 42px; height: 42px; border-radius: 13px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 19px; flex-shrink: 0;
+  }
+  .icon-badge.violet { background: var(--accent-soft); }
+  .icon-badge.mint { background: var(--accent-2-soft); }
+  .card-head h2 { font-family: var(--display); font-size: 16.5px; font-weight: 700; color: var(--ink); margin: 0; }
+
+  .item-row {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 10px 12px; border: 1px solid var(--rule); border-radius: var(--radius);
+    padding: 11px 13px; border: 1.5px solid var(--line); border-radius: var(--radius-sm);
     margin-bottom: 8px; font-size: 14px;
   }
-  .category-row span { flex: 1; }
-  .category-row button {
+  .item-row .info { display: flex; flex-direction: column; }
+  .item-row .amount { font-family: var(--display); font-weight: 600; font-size: 12.5px; color: var(--ink-soft); }
+  .item-row button {
     width: auto; background: none; border: none; color: var(--alert);
-    font-family: var(--mono); font-size: 11px; cursor: pointer; padding: 4px 6px;
+    font-size: 12px; font-weight: 500; cursor: pointer; padding: 4px 6px;
   }
-  .category-row button:hover { text-decoration: underline; }
-
-  .bill-item-row {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 10px 12px; border: 1px solid var(--rule); border-radius: var(--radius);
-    margin-bottom: 8px; font-size: 14px;
-  }
-  .bill-item-row .bill-info { display: flex; flex-direction: column; }
-  .bill-item-row .bill-amount { font-family: var(--mono); font-size: 12px; color: var(--ink-soft); }
-  .bill-item-row button {
-    width: auto; background: none; border: none; color: var(--alert);
-    font-family: var(--mono); font-size: 11px; cursor: pointer; padding: 4px 6px;
-  }
-  .bill-item-row button:hover { text-decoration: underline; }
+  .item-row button:hover { text-decoration: underline; }
 
   .add-row { display: flex; gap: 8px; margin-top: 14px; }
   .add-row input {
-    flex: 1; padding: 10px 12px; border: 1px solid var(--rule); border-radius: var(--radius);
-    background: var(--paper); font-family: var(--sans); font-size: 14px; color: var(--ink);
+    flex: 1; padding: 11px 13px; border: 1.5px solid var(--line); border-radius: var(--radius-sm);
+    background: #FBFBFD; font-family: var(--sans); font-size: 14px; color: var(--ink);
   }
-  .add-row input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  .add-row input:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
   .add-row button {
-    width: auto; padding: 10px 16px; border-radius: var(--radius); border: 1px dashed var(--accent);
-    background: transparent; color: var(--accent); font-family: var(--mono); font-size: 12px;
-    font-weight: 600; cursor: pointer;
+    width: auto; padding: 11px 18px; border-radius: 999px; border: none;
+    background: var(--accent); color: #fff; font-family: var(--display); font-size: 12.5px; font-weight: 700;
+    cursor: pointer;
   }
-  .add-row button:hover { background: var(--accent-soft); }
+  .add-row button:hover { opacity: 0.92; }
 
   .bill-form { margin-top: 14px; }
   .bill-form .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
   .bill-form input {
-    width: 100%; padding: 10px 12px; border: 1px solid var(--rule); border-radius: var(--radius);
-    background: var(--paper); font-family: var(--sans); font-size: 14px; color: var(--ink); margin-bottom: 8px;
+    width: 100%; padding: 11px 13px; border: 1.5px solid var(--line); border-radius: var(--radius-sm);
+    background: #FBFBFD; font-family: var(--sans); font-size: 14px; color: var(--ink); margin-bottom: 8px;
   }
-  .bill-form input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
-  .checkbox-row { display: flex; align-items: center; gap: 8px; margin: 8px 0 10px; font-size: 12px; color: var(--ink-soft); }
+  .bill-form input:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+  .checkbox-row { display: flex; align-items: center; gap: 8px; margin: 6px 0 12px; font-size: 12.5px; color: var(--ink-soft); }
   .checkbox-row input[type="checkbox"] { width: auto; accent-color: var(--accent); }
   .bill-form button {
-    width: 100%; padding: 10px 16px; border-radius: var(--radius); border: 1px dashed var(--accent);
-    background: transparent; color: var(--accent); font-family: var(--mono); font-size: 12px;
-    font-weight: 600; cursor: pointer;
+    width: 100%; padding: 12px 16px; border-radius: 999px; border: none;
+    background: var(--accent); color: #fff; font-family: var(--display); font-size: 13.5px; font-weight: 700;
+    cursor: pointer;
   }
-  .bill-form button:hover { background: var(--accent-soft); }
+  .bill-form button:hover { opacity: 0.92; }
 
-  .status-line {
-    margin-top: 12px; font-family: var(--mono); font-size: 12px;
-    text-align: center; min-height: 16px; color: var(--ink-soft);
-  }
-  .status-line.success { color: var(--accent); }
+  .status-line { margin-top: 12px; font-size: 12.5px; text-align: center; min-height: 16px; color: var(--ink-soft); font-weight: 500; }
+  .status-line.success { color: var(--accent-2); }
   .status-line.error { color: var(--alert); }
 
-  .empty-hint {
-    font-size: 12px; color: var(--ink-soft); text-align: center; padding: 12px 0;
-  }
+  .empty-hint { font-size: 12.5px; color: var(--ink-soft); text-align: center; padding: 10px 0; }
 </style>
 </head>
 <body>
 
-  <div class="receipt">
-    <div class="masthead">
+  <div class="app">
+
+    <div class="hero">
       <a class="back-link" href="/">‹ Back</a>
-      <div class="eyebrow">Personal Ledger</div>
       <h1>Settings</h1>
       <div class="sub">Manage your categories and recurring bills.</div>
     </div>
 
-    <div class="ticket">
-      <div class="ticket-label">
-        <h2>Your Categories</h2>
-        <span class="tag">§ 03</span>
+    <div class="card">
+      <div class="card-head">
+        <div class="icon-badge violet">🏷️</div>
+        <h2>Categories</h2>
       </div>
 
       <div id="categoryList"></div>
@@ -144,10 +142,10 @@
       <div class="status-line" id="categoryStatusLine"></div>
     </div>
 
-    <div class="ticket">
-      <div class="ticket-label">
+    <div class="card">
+      <div class="card-head">
+        <div class="icon-badge mint">📄</div>
         <h2>Recurring Bills</h2>
-        <span class="tag">§ 04</span>
       </div>
 
       <div id="billList"></div>
@@ -171,7 +169,6 @@
   </div>
 
 <script>
-  // ---------- Categories ----------
   const categoryList = document.getElementById('categoryList');
   const emptyCategoryHint = document.getElementById('emptyCategoryHint');
   const categoryStatusLine = document.getElementById('categoryStatusLine');
@@ -197,7 +194,7 @@
 
     categories.forEach(category => {
       const row = document.createElement('div');
-      row.className = 'category-row';
+      row.className = 'item-row';
 
       const label = document.createElement('span');
       label.textContent = category;
@@ -273,7 +270,6 @@
     if (e.key === 'Enter') addCategory();
   });
 
-  // ---------- Bills ----------
   const billList = document.getElementById('billList');
   const emptyBillHint = document.getElementById('emptyBillHint');
   const billStatusLine = document.getElementById('billStatusLine');
@@ -298,16 +294,16 @@
 
     bills.forEach(bill => {
       const row = document.createElement('div');
-      row.className = 'bill-item-row';
+      row.className = 'item-row';
 
       const info = document.createElement('div');
-      info.className = 'bill-info';
+      info.className = 'info';
 
       const nameSpan = document.createElement('span');
       nameSpan.textContent = bill.bill_name;
 
       const amountSpan = document.createElement('span');
-      amountSpan.className = 'bill-amount';
+      amountSpan.className = 'amount';
       amountSpan.textContent = Number(bill.amount).toFixed(2);
 
       info.appendChild(nameSpan);
