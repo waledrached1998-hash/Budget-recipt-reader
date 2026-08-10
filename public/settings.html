@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Slipnote — Categories</title>
+<title>Slipnote — Settings</title>
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#2F6B4F">
 <link rel="icon" href="/icons/icon-192.png">
@@ -46,6 +46,7 @@
   .masthead h1 { font-family: var(--mono); font-size: 22px; font-weight: 700; letter-spacing: -0.01em; margin: 6px 0 4px; }
   .masthead .sub { font-size: 13px; color: var(--ink-soft); }
   .ticket { padding: 22px 24px; }
+  .ticket + .ticket { border-top: 1px dashed var(--rule); }
   .ticket-label { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
   .ticket-label h2 { font-family: var(--mono); font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink); margin: 0; }
   .ticket-label .tag { font-family: var(--mono); font-size: 11px; color: var(--ink-soft); }
@@ -62,6 +63,19 @@
   }
   .category-row button:hover { text-decoration: underline; }
 
+  .bill-item-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 12px; border: 1px solid var(--rule); border-radius: var(--radius);
+    margin-bottom: 8px; font-size: 14px;
+  }
+  .bill-item-row .bill-info { display: flex; flex-direction: column; }
+  .bill-item-row .bill-amount { font-family: var(--mono); font-size: 12px; color: var(--ink-soft); }
+  .bill-item-row button {
+    width: auto; background: none; border: none; color: var(--alert);
+    font-family: var(--mono); font-size: 11px; cursor: pointer; padding: 4px 6px;
+  }
+  .bill-item-row button:hover { text-decoration: underline; }
+
   .add-row { display: flex; gap: 8px; margin-top: 14px; }
   .add-row input {
     flex: 1; padding: 10px 12px; border: 1px solid var(--rule); border-radius: var(--radius);
@@ -74,6 +88,22 @@
     font-weight: 600; cursor: pointer;
   }
   .add-row button:hover { background: var(--accent-soft); }
+
+  .bill-form { margin-top: 14px; }
+  .bill-form .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .bill-form input {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--rule); border-radius: var(--radius);
+    background: var(--paper); font-family: var(--sans); font-size: 14px; color: var(--ink); margin-bottom: 8px;
+  }
+  .bill-form input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  .checkbox-row { display: flex; align-items: center; gap: 8px; margin: 8px 0 10px; font-size: 12px; color: var(--ink-soft); }
+  .checkbox-row input[type="checkbox"] { width: auto; accent-color: var(--accent); }
+  .bill-form button {
+    width: 100%; padding: 10px 16px; border-radius: var(--radius); border: 1px dashed var(--accent);
+    background: transparent; color: var(--accent); font-family: var(--mono); font-size: 12px;
+    font-weight: 600; cursor: pointer;
+  }
+  .bill-form button:hover { background: var(--accent-soft); }
 
   .status-line {
     margin-top: 12px; font-family: var(--mono); font-size: 12px;
@@ -93,8 +123,8 @@
     <div class="masthead">
       <a class="back-link" href="/">‹ Back</a>
       <div class="eyebrow">Personal Ledger</div>
-      <h1>Categories</h1>
-      <div class="sub">These sort every receipt you scan.</div>
+      <h1>Settings</h1>
+      <div class="sub">Manage your categories and recurring bills.</div>
     </div>
 
     <div class="ticket">
@@ -104,21 +134,47 @@
       </div>
 
       <div id="categoryList"></div>
-      <div class="empty-hint" id="emptyHint" style="display:none;">No categories yet — add your first one below.</div>
+      <div class="empty-hint" id="emptyCategoryHint" style="display:none;">No categories yet — add your first one below.</div>
 
       <div class="add-row">
         <input type="text" id="newCategoryInput" placeholder="e.g. Subscriptions">
         <button type="button" onclick="addCategory()">+ Add</button>
       </div>
 
-      <div class="status-line" id="statusLine"></div>
+      <div class="status-line" id="categoryStatusLine"></div>
+    </div>
+
+    <div class="ticket">
+      <div class="ticket-label">
+        <h2>Recurring Bills</h2>
+        <span class="tag">§ 04</span>
+      </div>
+
+      <div id="billList"></div>
+      <div class="empty-hint" id="emptyBillHint" style="display:none;">No bills saved yet — add your first one below.</div>
+
+      <div class="bill-form">
+        <input type="text" id="newBillName" placeholder="Bill name, e.g. Rent">
+        <div class="row-2">
+          <input type="number" id="newBillAmount" placeholder="Amount">
+          <input type="date" id="newBillDueDate">
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="applyToCurrentMonth">
+          <label for="applyToCurrentMonth">Also add to this month's sheet</label>
+        </div>
+        <button type="button" onclick="addBill()">+ Add Bill</button>
+      </div>
+
+      <div class="status-line" id="billStatusLine"></div>
     </div>
   </div>
 
 <script>
+  // ---------- Categories ----------
   const categoryList = document.getElementById('categoryList');
-  const emptyHint = document.getElementById('emptyHint');
-  const statusLine = document.getElementById('statusLine');
+  const emptyCategoryHint = document.getElementById('emptyCategoryHint');
+  const categoryStatusLine = document.getElementById('categoryStatusLine');
   const newCategoryInput = document.getElementById('newCategoryInput');
 
   function loadCategories() {
@@ -126,18 +182,18 @@
       .then(res => res.json())
       .then(data => renderCategories(data.categories || []))
       .catch(err => {
-        statusLine.textContent = 'Could not load categories.';
-        statusLine.className = 'status-line error';
+        categoryStatusLine.textContent = 'Could not load categories.';
+        categoryStatusLine.className = 'status-line error';
       });
   }
 
   function renderCategories(categories) {
     categoryList.innerHTML = '';
     if (categories.length === 0) {
-      emptyHint.style.display = 'block';
+      emptyCategoryHint.style.display = 'block';
       return;
     }
-    emptyHint.style.display = 'none';
+    emptyCategoryHint.style.display = 'none';
 
     categories.forEach(category => {
       const row = document.createElement('div');
@@ -161,8 +217,8 @@
     const category = newCategoryInput.value.trim();
     if (!category) return;
 
-    statusLine.textContent = 'Adding…';
-    statusLine.className = 'status-line';
+    categoryStatusLine.textContent = 'Adding…';
+    categoryStatusLine.className = 'status-line';
 
     fetch('/categories/add', {
       method: 'POST',
@@ -172,24 +228,24 @@
       .then(res => res.json())
       .then(data => {
         if (data.status === 'added') {
-          statusLine.textContent = 'Added.';
-          statusLine.className = 'status-line success';
+          categoryStatusLine.textContent = 'Added.';
+          categoryStatusLine.className = 'status-line success';
           newCategoryInput.value = '';
           loadCategories();
         } else {
-          statusLine.textContent = data.error || 'Could not add category.';
-          statusLine.className = 'status-line error';
+          categoryStatusLine.textContent = data.error || 'Could not add category.';
+          categoryStatusLine.className = 'status-line error';
         }
       })
       .catch(err => {
-        statusLine.textContent = 'Error: ' + err.message;
-        statusLine.className = 'status-line error';
+        categoryStatusLine.textContent = 'Error: ' + err.message;
+        categoryStatusLine.className = 'status-line error';
       });
   }
 
   function removeCategory(category) {
-    statusLine.textContent = 'Removing…';
-    statusLine.className = 'status-line';
+    categoryStatusLine.textContent = 'Removing…';
+    categoryStatusLine.className = 'status-line';
 
     fetch('/categories/remove', {
       method: 'POST',
@@ -199,17 +255,17 @@
       .then(res => res.json())
       .then(data => {
         if (data.status === 'removed') {
-          statusLine.textContent = 'Removed.';
-          statusLine.className = 'status-line success';
+          categoryStatusLine.textContent = 'Removed.';
+          categoryStatusLine.className = 'status-line success';
           loadCategories();
         } else {
-          statusLine.textContent = data.error || 'Could not remove category.';
-          statusLine.className = 'status-line error';
+          categoryStatusLine.textContent = data.error || 'Could not remove category.';
+          categoryStatusLine.className = 'status-line error';
         }
       })
       .catch(err => {
-        statusLine.textContent = 'Error: ' + err.message;
-        statusLine.className = 'status-line error';
+        categoryStatusLine.textContent = 'Error: ' + err.message;
+        categoryStatusLine.className = 'status-line error';
       });
   }
 
@@ -217,7 +273,129 @@
     if (e.key === 'Enter') addCategory();
   });
 
+  // ---------- Bills ----------
+  const billList = document.getElementById('billList');
+  const emptyBillHint = document.getElementById('emptyBillHint');
+  const billStatusLine = document.getElementById('billStatusLine');
+
+  function loadBills() {
+    fetch('/bills')
+      .then(res => res.json())
+      .then(data => renderBills(data.bills || []))
+      .catch(err => {
+        billStatusLine.textContent = 'Could not load bills.';
+        billStatusLine.className = 'status-line error';
+      });
+  }
+
+  function renderBills(bills) {
+    billList.innerHTML = '';
+    if (bills.length === 0) {
+      emptyBillHint.style.display = 'block';
+      return;
+    }
+    emptyBillHint.style.display = 'none';
+
+    bills.forEach(bill => {
+      const row = document.createElement('div');
+      row.className = 'bill-item-row';
+
+      const info = document.createElement('div');
+      info.className = 'bill-info';
+
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = bill.bill_name;
+
+      const amountSpan = document.createElement('span');
+      amountSpan.className = 'bill-amount';
+      amountSpan.textContent = Number(bill.amount).toFixed(2);
+
+      info.appendChild(nameSpan);
+      info.appendChild(amountSpan);
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.textContent = '× remove';
+      removeBtn.addEventListener('click', () => removeBill(bill.bill_name));
+
+      row.appendChild(info);
+      row.appendChild(removeBtn);
+      billList.appendChild(row);
+    });
+  }
+
+  function addBill() {
+    const name = document.getElementById('newBillName').value.trim();
+    const amount = parseFloat(document.getElementById('newBillAmount').value);
+    const dueDate = document.getElementById('newBillDueDate').value;
+    const applyToCurrentMonth = document.getElementById('applyToCurrentMonth').checked;
+
+    if (!name || isNaN(amount)) {
+      billStatusLine.textContent = 'Enter a name and amount first.';
+      billStatusLine.className = 'status-line error';
+      return;
+    }
+
+    const bill = { name, amount };
+    if (dueDate) bill.due_date = dueDate;
+
+    billStatusLine.textContent = 'Adding…';
+    billStatusLine.className = 'status-line';
+
+    fetch('/bills/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bill, apply_to_current_month: applyToCurrentMonth }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'added') {
+          billStatusLine.textContent = 'Added.';
+          billStatusLine.className = 'status-line success';
+          document.getElementById('newBillName').value = '';
+          document.getElementById('newBillAmount').value = '';
+          document.getElementById('newBillDueDate').value = '';
+          document.getElementById('applyToCurrentMonth').checked = false;
+          loadBills();
+        } else {
+          billStatusLine.textContent = data.error || 'Could not add bill.';
+          billStatusLine.className = 'status-line error';
+        }
+      })
+      .catch(err => {
+        billStatusLine.textContent = 'Error: ' + err.message;
+        billStatusLine.className = 'status-line error';
+      });
+  }
+
+  function removeBill(name) {
+    billStatusLine.textContent = 'Removing…';
+    billStatusLine.className = 'status-line';
+
+    fetch('/bills/remove', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bill: { name } }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'removed') {
+          billStatusLine.textContent = 'Removed.';
+          billStatusLine.className = 'status-line success';
+          loadBills();
+        } else {
+          billStatusLine.textContent = data.error || 'Could not remove bill.';
+          billStatusLine.className = 'status-line error';
+        }
+      })
+      .catch(err => {
+        billStatusLine.textContent = 'Error: ' + err.message;
+        billStatusLine.className = 'status-line error';
+      });
+  }
+
   loadCategories();
+  loadBills();
 </script>
 </body>
 </html>

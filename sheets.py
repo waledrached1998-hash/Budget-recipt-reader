@@ -107,6 +107,33 @@ def write_expenses(parsed, sheet_tab,sheets_service,sheet_id):
         current_row = current_row + 1
 
 
+def write_bills(request_json, sheet_tab,sheets_service,sheet_id):
+    result = sheets_service.spreadsheets().values().get(
+        spreadsheetId=sheet_id,
+        range=f"{sheet_tab}!M17:M56"
+    ).execute()
+    values = result.get('values', [])
+    current_row = 17 + len(values)
+
+    for entry in request_json['bills']:
+        due_date = entry.get('due_date', '')
+
+        body = {
+            "valueInputOption": "USER_ENTERED",
+            "data": [
+                {"range": f"{sheet_tab}!M{current_row}", "values": [[entry['name']]]},
+                {"range": f"{sheet_tab}!N{current_row}", "values": [[due_date]]},
+                {"range": f"{sheet_tab}!P{current_row}", "values": [[entry['amount']]]},
+                {"range": f"{sheet_tab}!R{current_row}", "values": [[entry['amount']]]}
+            ]
+        }
+        sheets_service.spreadsheets().values().batchUpdate(spreadsheetId=sheet_id, body=body).execute()
+        current_row = current_row+1
+    
+    
+
+    
+
 def does_tab_exist(tab_name,sheets_service,sheet_id):
     result = sheets_service.spreadsheets().get(spreadsheetId=sheet_id).execute()
     for sheet in result['sheets']:

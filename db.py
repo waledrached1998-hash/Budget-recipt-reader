@@ -29,6 +29,14 @@ def init_db():
             PRIMARY KEY (user_id, category)
         )
     ''')
+    conn.execute('''
+        CREATE TABLE user_bills (
+            user_id TEXT,
+            bill_name TEXT,
+            amount REAL,
+            PRIMARY KEY (user_id, bill_name)
+        )
+    ''')
     conn.commit()
     conn.close()
 
@@ -132,6 +140,21 @@ def get_categories(user_id):
     conn.close()
     return [row[0] for row in rows]
 
+def get_bills(user_id):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.execute('''
+            SELECT 
+                bill_name,
+                amount
+            FROM user_bills
+            WHERE user_id = ? 
+        ''', (user_id,))
+    rows = cursor.fetchall()
+    conn.close()
+    return [{"bill_name": row[0], "amount": row[1]} for row in rows]
+
+
+
 def set_category(user_id,category):
     conn = sqlite3.connect(DB_PATH)
     conn.execute('''
@@ -148,3 +171,37 @@ def delete_category(user_id, category):
     ''', (user_id, category))
     conn.commit()
     conn.close()
+
+def set_bill(user_id, bill_name, amount):
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute('''
+        INSERT INTO user_bills (user_id, bill_name, amount)
+        VALUES (?, ?, ?)
+        ON CONFLICT(user_id, bill_name) DO UPDATE SET
+            amount = excluded.amount
+    ''', (user_id, bill_name, amount))
+    conn.commit()
+    conn.close()
+
+
+def delete_bill(user_id, bill_name):
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute('''
+        DELETE FROM user_bills
+        WHERE user_id = ? AND bill_name = ?
+    ''', (user_id, bill_name))
+    conn.commit()
+    conn.close()
+
+def sync_bills(user_id, bills):
+    submitted_names = [b['name'] for b in bills]
+
+    # step 1: upsert each submitted bill
+    for bill in bills:
+        set_bill(user_id, bill['name'], bill['amount'])
+
+    # step 2: delete any saved bill NOT in the submitted list
+    existing = get_bills(user_id)
+    for existing_bill in existing:
+        if existing_bill['bill_name'] not in submitted_names:
+            delete_bill(user_id, existing_bill['bill_name'])

@@ -3,7 +3,7 @@ from functools import wraps
 import sheets as s
 import claude_client as cc
 import config as c
-from db import init_db,get_categories,set_category,delete_category
+from db import init_db,get_categories,set_category,delete_category,get_bills,set_bill,delete_bill,sync_bills
 import auth
 
 app = Flask(__name__, static_folder='public')
@@ -91,15 +91,22 @@ def new_month():
 
     if new_tab_name is None:
         return {"error": "Could not determine next month name"}, 400
-    if s.does_tab_exist(new_tab_name,sheets_service,sheet_id):
+    if s.does_tab_exist(new_tab_name, sheets_service, sheet_id):
         return {"status": "already exists"}, 400
 
-    s.duplicate_template_tab(request_json,new_tab_name,sheets_service,sheet_id,user_id)
-    s.write_income(request_json, new_tab_name,sheets_service,sheet_id)
-    s.write_savings(request_json, new_tab_name,sheets_service,sheet_id)
-    s.write_date(request_json, new_tab_name,sheets_service,sheet_id)
-    return {"status": "created"}
+    s.duplicate_template_tab(request_json, new_tab_name, sheets_service, sheet_id, user_id)
+    s.write_income(request_json, new_tab_name, sheets_service, sheet_id)
+    s.write_savings(request_json, new_tab_name, sheets_service, sheet_id)
+    s.write_date(request_json, new_tab_name, sheets_service, sheet_id)
 
+    if request_json.get('modify_bills'):
+        sync_bills(user_id, request_json['bills'])
+
+    bills = get_bills(user_id)
+    s.write_bills({"bills": bills}, new_tab_name, sheets_service, sheet_id)
+
+    return {"status": "created"}
+ 
 
 @app.route('/scan-receipt', methods=["POST"])
 @login_required
@@ -187,6 +194,41 @@ def remove_category():
     sheet_id = s.get_user_sheet_id(user_id)
     sheets_service = s.get_user_sheets_service(user_id)
     s.sync_categories_to_sheet(user_id,sheets_service,sheet_id)
+    return {"status": "removed"}
+
+@app.route('/bills', methods=["GET"])
+@login_required
+def list_bills():
+    bills = get_bills(session['user_id'])
+    return {"bills": bills}
+
+
+@app.route('/bills/add', methods=["POST"])
+@login_required
+def add_bill():
+    user_id = session['user_id']
+    data = request.json
+    bill = data['bill']
+
+    set_bill(user_id, bill['name'], bill['amount'])
+
+    if data.get('apply_to_current_month'):
+        sheet_id = s.get_user_sheet_id(user_id)
+        tab_name = s.get_current_tab(user_id, sheet_id)
+        sheets_service = s.get_user_sheets_service(user_id)
+        if tab_name is not None:
+            s.write_bills({"bills": [bill]}, tab_name, sheets_service, sheet_id)
+
+    return {"status": "added"}
+
+@app.route('/bills/remove', methods=["POST"])
+@login_required
+def remove_bill():
+    user_id = session['user_id']
+    data = request.json
+    bill = data['bill']
+    
+    delete_bill(user_id, bill['name'])
     return {"status": "removed"}
 
 if __name__ == '__main__':
