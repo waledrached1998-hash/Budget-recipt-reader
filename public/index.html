@@ -48,54 +48,50 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  .app {
-    width: 100%;
-    max-width: 430px;
-  }
+  .app { width: 100%; max-width: 430px; }
 
-  .hero {
-    padding: 6px 4px 22px;
+  .hero { padding: 6px 4px 18px; position: relative; }
+  .hero .eyebrow { font-family: var(--sans); font-size: 13px; color: var(--ink-soft); font-weight: 500; }
+  .hero h1 { font-family: var(--display); font-size: 30px; font-weight: 700; letter-spacing: -0.02em; margin: 3px 0 0; color: var(--ink); }
+  #settingsLink {
+    position: absolute; top: 2px; right: 4px;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border-radius: 50%; background: var(--card);
+    color: var(--ink-soft); text-decoration: none; font-size: 16px;
+    box-shadow: 0 1px 2px rgba(22,22,31,0.06), 0 6px 16px -6px rgba(22,22,31,0.18);
+    transition: color 0.15s ease, transform 0.08s ease;
   }
-  .hero .eyebrow {
-    font-family: var(--sans);
-    font-size: 13px;
-    color: var(--ink-soft);
-    font-weight: 500;
+  #settingsLink:hover { color: var(--accent); }
+  #settingsLink:active { transform: scale(0.94); }
+
+  .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .quick-action {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+    background: var(--card); border-radius: var(--radius-sm); padding: 14px;
+    text-decoration: none; color: var(--ink);
+    box-shadow: 0 1px 2px rgba(22,22,31,0.04), 0 8px 20px -12px rgba(22,22,31,0.14);
+    transition: transform 0.08s ease;
   }
-  .hero h1 {
-    font-family: var(--display);
-    font-size: 30px;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    margin: 3px 0 0;
-    color: var(--ink);
-  }
+  .quick-action:active { transform: scale(0.97); }
+  .quick-action .qa-icon { font-size: 20px; }
+  .quick-action .qa-label { font-family: var(--display); font-size: 13px; font-weight: 700; }
+  .quick-action .qa-note { font-size: 11px; color: var(--ink-soft); }
+  .quick-action.coral .qa-icon { filter: none; }
 
   .card {
-    background: var(--card);
-    border-radius: var(--radius);
-    padding: 20px;
-    margin-bottom: 14px;
+    background: var(--card); border-radius: var(--radius); padding: 20px; margin-bottom: 14px;
     box-shadow: 0 1px 2px rgba(22,22,31,0.04), 0 12px 28px -14px rgba(22,22,31,0.14);
   }
 
   .card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-  .icon-badge {
-    width: 42px; height: 42px; border-radius: 13px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 19px; flex-shrink: 0;
-  }
+  .icon-badge { width: 42px; height: 42px; border-radius: 13px; display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0; }
   .icon-badge.violet { background: var(--accent-soft); }
   .icon-badge.mint { background: var(--accent-2-soft); }
   .card-head-col { display: flex; flex-direction: column; }
-  .card-head h2 {
-    font-family: var(--display); font-size: 16.5px; font-weight: 700; color: var(--ink); margin: 0;
-  }
+  .card-head h2 { font-family: var(--display); font-size: 16.5px; font-weight: 700; color: var(--ink); margin: 0; }
   .card-head .card-note { font-size: 12px; color: var(--ink-soft); margin-top: 1px; }
 
-  label.field {
-    display: block; font-size: 12px; font-weight: 500; color: var(--ink-soft); margin-bottom: 5px;
-  }
+  label.field { display: block; font-size: 12px; font-weight: 500; color: var(--ink-soft); margin-bottom: 5px; }
   .field-group { margin-bottom: 13px; }
   .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
@@ -114,17 +110,11 @@
   }
 
   fieldset { border: 1.5px solid var(--line); border-radius: var(--radius-sm); padding: 13px 13px 15px; margin: 0 0 13px; }
-  legend {
-    font-family: var(--display); font-size: 11.5px; font-weight: 600; text-transform: uppercase;
-    letter-spacing: 0.04em; color: var(--ink-soft); padding: 0 6px;
-  }
+  legend { font-family: var(--display); font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); padding: 0 6px; }
 
   .field-row { display: grid; grid-template-columns: 1.4fr 1fr; gap: 8px; margin-bottom: 8px; }
   .field-row:last-child { margin-bottom: 0; }
-  .field-row .remove-row {
-    grid-column: 1 / -1; background: none; border: none; color: var(--alert);
-    font-size: 12px; font-weight: 500; text-align: left; padding: 2px 0 6px; cursor: pointer; width: auto;
-  }
+  .field-row .remove-row { grid-column: 1 / -1; background: none; border: none; color: var(--alert); font-size: 12px; font-weight: 500; text-align: left; padding: 2px 0 6px; cursor: pointer; width: auto; }
 
   button {
     width: 100%; padding: 14px 18px; border-radius: 999px; border: none;
@@ -136,9 +126,7 @@
   .btn-primary { background: var(--accent); color: #fff; box-shadow: 0 8px 20px -8px rgba(101,82,245,0.55); }
   .btn-primary:hover { opacity: 0.92; }
 
-  .btn-secondary {
-    background: var(--accent-soft); color: var(--accent); font-size: 13px; padding: 10px 14px; border-radius: var(--radius-sm);
-  }
+  .btn-secondary { background: var(--accent-soft); color: var(--accent); font-size: 13px; padding: 10px 14px; border-radius: var(--radius-sm); }
   .btn-secondary:hover { background: #E3DDFC; }
 
   .btn-ghost { background: #F3F3F8; color: var(--ink); border: 1.5px solid var(--line); border-radius: var(--radius-sm); }
@@ -152,18 +140,15 @@
 
   #preview { display: none; width: 100%; border-radius: var(--radius-sm); margin-top: 12px; border: 1.5px solid var(--line); }
 
-  .footer-row { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 6px 4px 0; }
-  .footer-link {
-    font-size: 12.5px; font-weight: 500; color: var(--ink-soft);
-    text-decoration: none;
-  }
+  .footer-row { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 6px 4px 0; flex-wrap: wrap; }
+  .footer-link { font-size: 12.5px; font-weight: 500; color: var(--ink-soft); text-decoration: none; }
   .footer-link:hover { color: var(--accent); }
-  #settingsLink {
+  .icon-link {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 30px; height: 30px; border-radius: 50%; color: var(--ink-soft);
-    text-decoration: none; transition: color 0.15s ease, background 0.15s ease;
+    width: 32px; height: 32px; border-radius: 50%; font-size: 15px;
+    text-decoration: none; transition: background 0.15s ease;
   }
-  #settingsLink:hover { color: var(--accent); background: var(--accent-soft); }
+  .icon-link:hover { background: var(--accent-soft); }
   .link-sep { color: var(--line); }
 
   #reviewSection, #manualSection { display: none; }
@@ -187,6 +172,20 @@
     <div class="hero">
       <div class="eyebrow">Good to see you</div>
       <h1>Your Ledger</h1>
+      <a href="/settings" id="settingsLink" title="Settings">⚙️</a>
+    </div>
+
+    <div class="quick-actions">
+      <a href="/cycle" class="quick-action coral">
+        <span class="qa-icon">🗓️</span>
+        <span class="qa-label">Current Cycle</span>
+        <span class="qa-note">Dates, income, savings</span>
+      </a>
+      <a href="/manage-bills" class="quick-action mint">
+        <span class="qa-icon">📄</span>
+        <span class="qa-label">Recurring Bills</span>
+        <span class="qa-note">Manage your bills</span>
+      </a>
     </div>
 
     <div class="card" id="newMonthSection">
@@ -312,13 +311,6 @@
     </div>
 
     <div class="footer-row">
-      <a href="/settings" id="settingsLink" title="Settings">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="3"></circle>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-        </svg>
-      </a>
-      <span class="link-sep">·</span>
       <a class="footer-link" href="#" id="mySheetLink" target="_blank" rel="noopener">Open my sheet</a>
       <span class="link-sep">·</span>
       <a class="footer-link" href="/logout">Sign out</a>

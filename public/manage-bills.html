@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ledger — Recurring Bills</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#6552F5">
+<link rel="icon" href="/icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F6F5FA; --card: #FFFFFF; --ink: #16161F; --ink-soft: #6E6E85;
+    --accent: #6552F5; --accent-soft: #EDE9FE; --accent-2: #12B886;
+    --line: #EDEDF3; --alert: #E5484D; --radius: 20px; --radius-sm: 12px;
+    --display: 'Sora', sans-serif; --sans: 'Inter', sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg);
+    background-image: radial-gradient(circle at 100% 10%, rgba(18,184,134,0.10), transparent 40%);
+    color: var(--ink); font-family: var(--sans);
+    min-height: 100vh; display: flex; justify-content: center;
+    padding: 22px 14px 80px; -webkit-font-smoothing: antialiased;
+  }
+  .app { width: 100%; max-width: 430px; }
+  .banner {
+    background: linear-gradient(135deg, #12B886, #0A8F68);
+    border-radius: var(--radius); padding: 26px 22px 22px; margin-bottom: 16px;
+    position: relative; color: #fff; overflow: hidden;
+  }
+  .banner::after {
+    content: "📄"; position: absolute; right: -6px; bottom: -18px; font-size: 92px; opacity: 0.18;
+  }
+  .banner .back-link { color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 500; text-decoration: none; }
+  .banner .back-link:hover { color: #fff; }
+  .banner h1 { font-family: var(--display); font-size: 26px; font-weight: 800; margin: 14px 0 3px; position: relative; z-index: 1; }
+  .banner .sub { font-size: 13px; color: rgba(255,255,255,0.85); position: relative; z-index: 1; }
+  .card { background: var(--card); border-radius: var(--radius); padding: 20px; box-shadow: 0 1px 2px rgba(22,22,31,0.04), 0 12px 28px -14px rgba(22,22,31,0.14); }
+  .card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .icon-badge { width: 42px; height: 42px; border-radius: 13px; display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0; background: var(--accent-2-soft, #E1F7EE); }
+  .card-head h2 { font-family: var(--display); font-size: 16.5px; font-weight: 700; margin: 0; }
+  .item-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 13px; border: 1.5px solid var(--line); border-radius: var(--radius-sm); margin-bottom: 8px; font-size: 14px; }
+  .item-row .info { display: flex; flex-direction: column; }
+  .item-row .amount { font-family: var(--display); font-weight: 600; font-size: 12.5px; color: var(--ink-soft); }
+  .item-row button { width: auto; background: none; border: none; color: var(--alert); font-size: 12px; font-weight: 500; cursor: pointer; padding: 4px 6px; }
+  .item-row button:hover { text-decoration: underline; }
+  label.field { display: block; font-size: 12px; font-weight: 500; color: var(--ink-soft); margin-bottom: 5px; margin-top: 14px; }
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+  input[type="text"], input[type="number"], input[type="date"] { width: 100%; padding: 11px 13px; border: 1.5px solid var(--line); border-radius: var(--radius-sm); background: #FBFBFD; font-family: var(--sans); font-size: 14.5px; color: var(--ink); }
+  input:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+  .checkbox-row { display: flex; align-items: center; gap: 8px; margin: 10px 0 12px; font-size: 12.5px; color: var(--ink-soft); }
+  .checkbox-row input[type="checkbox"] { width: auto; accent-color: var(--accent); }
+  button.wide { width: 100%; padding: 12px 16px; border-radius: 999px; border: none; background: var(--accent); color: #fff; font-family: var(--display); font-size: 13.5px; font-weight: 700; cursor: pointer; }
+  button.wide:hover { opacity: 0.92; }
+  .status-line { margin-top: 12px; font-size: 12.5px; text-align: center; min-height: 16px; color: var(--ink-soft); font-weight: 500; }
+  .status-line.success { color: var(--accent-2); }
+  .status-line.error { color: var(--alert); }
+  .empty-hint { font-size: 12.5px; color: var(--ink-soft); text-align: center; padding: 12px 0; }
+</style>
+</head>
+<body>
+  <div class="app">
+    <div class="banner">
+      <a class="back-link" href="/">‹ Back</a>
+      <h1>Recurring Bills</h1>
+      <div class="sub">Fixed costs that carry over into every new cycle.</div>
+    </div>
+
+    <div class="card" id="lockedMessage" style="display:none; text-align:center;">
+      <div class="icon-badge" style="margin:0 auto 12px;">🔒</div>
+      <h2 style="margin-bottom:6px;">No cycle yet</h2>
+      <p style="font-size:13px; color:var(--ink-soft); margin:0 0 16px;">Open your first cycle before managing recurring bills.</p>
+      <a href="/" style="display:inline-block; padding:11px 20px; border-radius:999px; background:var(--accent); color:#fff; font-family:var(--display); font-weight:700; font-size:13px; text-decoration:none;">Go to Home</a>
+    </div>
+
+    <div id="billsContent">
+    <div class="card">
+      <div class="card-head">
+        <div class="icon-badge">📄</div>
+        <h2>Your Bills</h2>
+      </div>
+
+      <div id="billList"></div>
+      <div class="empty-hint" id="emptyBillHint" style="display:none;">No bills saved yet — add your first one below.</div>
+
+      <label class="field">Bill name</label>
+      <input type="text" id="newBillName" placeholder="e.g. Rent">
+
+      <div class="row-2">
+        <div>
+          <label class="field">Amount</label>
+          <input type="number" id="newBillAmount" placeholder="Amount">
+        </div>
+        <div>
+          <label class="field">Due date</label>
+          <input type="date" id="newBillDueDate">
+        </div>
+      </div>
+
+      <div class="checkbox-row">
+        <input type="checkbox" id="applyToCurrentMonth">
+        <label for="applyToCurrentMonth">Also add to this month's sheet</label>
+      </div>
+
+      <button class="wide" type="button" onclick="addBill()">+ Add Bill</button>
+      <div class="status-line" id="billStatusLine"></div>
+    </div>
+    </div>
+  </div>
+
+<script>
+  fetch('/cycle-status')
+    .then(res => res.json())
+    .then(data => {
+      if (!data.active) {
+        document.getElementById('billsContent').style.display = 'none';
+        document.getElementById('lockedMessage').style.display = 'block';
+      }
+    })
+    .catch(() => {
+      document.getElementById('billsContent').style.display = 'none';
+      document.getElementById('lockedMessage').style.display = 'block';
+    });
+
+  const billList = document.getElementById('billList');
+  const emptyBillHint = document.getElementById('emptyBillHint');
+  const billStatusLine = document.getElementById('billStatusLine');
+
+  function loadBills() {
+    fetch('/bills')
+      .then(res => res.json())
+      .then(data => renderBills(data.bills || []))
+      .catch(() => {
+        billStatusLine.textContent = 'Could not load bills.';
+        billStatusLine.className = 'status-line error';
+      });
+  }
+
+  function renderBills(bills) {
+    billList.innerHTML = '';
+    if (bills.length === 0) {
+      emptyBillHint.style.display = 'block';
+      return;
+    }
+    emptyBillHint.style.display = 'none';
+
+    bills.forEach(bill => {
+      const row = document.createElement('div');
+      row.className = 'item-row';
+
+      const info = document.createElement('div');
+      info.className = 'info';
+
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = bill.bill_name;
+
+      const amountSpan = document.createElement('span');
+      amountSpan.className = 'amount';
+      amountSpan.textContent = Number(bill.amount).toFixed(2);
+
+      info.appendChild(nameSpan);
+      info.appendChild(amountSpan);
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.textContent = '× remove';
+      removeBtn.addEventListener('click', () => removeBill(bill.bill_name));
+
+      row.appendChild(info);
+      row.appendChild(removeBtn);
+      billList.appendChild(row);
+    });
+  }
+
+  function addBill() {
+    const name = document.getElementById('newBillName').value.trim();
+    const amount = parseFloat(document.getElementById('newBillAmount').value);
+    const dueDate = document.getElementById('newBillDueDate').value;
+    const applyToCurrentMonth = document.getElementById('applyToCurrentMonth').checked;
+
+    if (!name || isNaN(amount)) {
+      billStatusLine.textContent = 'Enter a name and amount first.';
+      billStatusLine.className = 'status-line error';
+      return;
+    }
+
+    const bill = { name, amount };
+    if (dueDate) bill.due_date = dueDate;
+
+    billStatusLine.textContent = 'Adding…';
+    billStatusLine.className = 'status-line';
+
+    fetch('/bills/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bill, apply_to_current_month: applyToCurrentMonth }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'added') {
+          billStatusLine.textContent = 'Added.';
+          billStatusLine.className = 'status-line success';
+          document.getElementById('newBillName').value = '';
+          document.getElementById('newBillAmount').value = '';
+          document.getElementById('newBillDueDate').value = '';
+          document.getElementById('applyToCurrentMonth').checked = false;
+          loadBills();
+        } else {
+          billStatusLine.textContent = data.error || 'Could not add bill.';
+          billStatusLine.className = 'status-line error';
+        }
+      })
+      .catch(err => {
+        billStatusLine.textContent = 'Error: ' + err.message;
+        billStatusLine.className = 'status-line error';
+      });
+  }
+
+  function removeBill(name) {
+    billStatusLine.textContent = 'Removing…';
+    billStatusLine.className = 'status-line';
+
+    fetch('/bills/remove', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bill: { name } }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'removed') {
+          billStatusLine.textContent = 'Removed.';
+          billStatusLine.className = 'status-line success';
+          loadBills();
+        } else {
+          billStatusLine.textContent = data.error || 'Could not remove bill.';
+          billStatusLine.className = 'status-line error';
+        }
+      })
+      .catch(err => {
+        billStatusLine.textContent = 'Error: ' + err.message;
+        billStatusLine.className = 'status-line error';
+      });
+  }
+
+  loadBills();
+</script>
+</body>
+</html>

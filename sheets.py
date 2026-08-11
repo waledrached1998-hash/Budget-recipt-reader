@@ -239,4 +239,108 @@ def sync_categories_to_sheet(user_id, sheets_service, sheet_id):
     if current_tab is not None :
         write_categories_to_tab(current_tab,sheets_service,categories,sheet_id)
 
+def get_current_income(sheet_tab, sheets_service, sheet_id):
+    income_result_name = sheets_service.spreadsheets().values().get(
+        spreadsheetId = sheet_id,
+        range = f"{sheet_tab}!E27:E36"
+    ).execute()
+    income_result_value = sheets_service.spreadsheets().values().get(
+            spreadsheetId = sheet_id,
+            range = f"{sheet_tab}!J27:J36"
+    ).execute()
+    
+    income_name = income_result_name.get('values', [])
+    income_value = income_result_value.get('values', [])
+    entries = []
+    for name_row, amount_row in zip(income_name, income_value):
+        entries.append({"name": name_row[0], "amount": amount_row[0]})
+
+    return entries  
+
+def replace_income(entries, sheet_tab, sheets_service, sheet_id):
+    clear_values = [[""] for _ in range(27, 37)]
+
+    body = {
+            "valueInputOption": "USER_ENTERED",
+            "data": [
+                    {"range": f"{sheet_tab}!E27:E36", "values": clear_values},
+                    {"range": f"{sheet_tab}!G27:G36", "values": clear_values},
+                    {"range": f"{sheet_tab}!J27:J36", "values": clear_values}
+                ]
+    }
+    sheets_service.spreadsheets().values().batchUpdate(
+            spreadsheetId = sheet_id, body = body
+    ).execute()
+
+
+    current_row = 27
+    for entry in entries:
+        write_body = {
+            "valueInputOption": "USER_ENTERED",
+            "data": [
+                {"range": f"{sheet_tab}!E{current_row}", "values": [[entry['name']]]},
+                {"range": f"{sheet_tab}!G{current_row}", "values": [[entry['amount']]]},
+                {"range": f"{sheet_tab}!J{current_row}", "values": [[entry['amount']]]}
+            ]
+        }
+        sheets_service.spreadsheets().values().batchUpdate(
+            spreadsheetId=sheet_id, body=write_body
+        ).execute()
+        current_row += 1
+
+    # write the given entries starting at row 27
+
+def get_current_savings(sheet_tab, sheets_service, sheet_id):
+    savings_result_name = sheets_service.spreadsheets().values().get(
+        spreadsheetId = sheet_id,
+        range =f"{sheet_tab}!E42:E56"
+    ).execute()
+    savings_result_value = sheets_service.spreadsheets().values().get(
+        spreadsheetId = sheet_id,
+        range =f"{sheet_tab}!J42:J56"
+    ).execute()
+    savings_name = savings_result_name.get('values',[])
+    savings_value = savings_result_value.get('values',[])
+
+    entries = []
+    for name,value in zip(savings_name,savings_value):
+        entries.append({'name':name[0],'amount':value[0]})
+
+    return entries
+
+def replace_savings(entries, sheet_tab, sheets_service, sheet_id):
+    clear_values = [[""] for _ in range(42, 57)]
+
+    body = {
+        "valueInputOption": "USER_ENTERED",
+        "data" : [
+            {"range":f"{sheet_tab}!E42:E56","values" : clear_values},
+            {"range":f"{sheet_tab}!G42:G56","values":clear_values},
+            {"range":f"{sheet_tab}!J42:J56","values":clear_values}
+        ] 
+    }
+    sheets_service.spreadsheets().values().batchUpdate(
+        spreadsheetId = sheet_id,
+        body = body
+        ).execute()
+    current_row = 42
+    for entry in entries : 
+        write_body = {
+            "valueInputOption": "USER_ENTERED",
+            "data": [
+                {"range":f"{sheet_tab}!E{current_row}","values":[[entry['name']]]},
+                {"range":f"{sheet_tab}!G{current_row}","values":[[entry['amount']]]},
+                {"range":f"{sheet_tab}!J{current_row}","values":[[entry['amount']]]}
+            ]
+        }
+        sheets_service.spreadsheets().values().batchUpdate(
+                    spreadsheetId = sheet_id,
+                    body = write_body
+            ).execute()
+        current_row = current_row +1
+
+    
+
+   
+
 

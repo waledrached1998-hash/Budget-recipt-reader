@@ -2,8 +2,13 @@ import sqlite3
 
 DB_PATH = 'budget.db'
 
+def get_connection():
+    conn = sqlite3.connect(DB_PATH, timeout=10)
+    conn.execute("PRAGMA journal_mode=WAL")
+    return conn
+
 def init_db():
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_connection()
     conn.execute('''
         CREATE TABLE IF NOT EXISTS user_sheet (
             user_id TEXT,
@@ -42,7 +47,7 @@ def init_db():
 
 
 def set_current_tab(user_id, sheet_id, tab_name, valid_until):
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_connection()
     conn.execute('''
         INSERT INTO user_sheet (user_id, sheet_id, current_tab_name, valid_until)
         VALUES (?, ?, ?, ?)
@@ -55,7 +60,7 @@ def set_current_tab(user_id, sheet_id, tab_name, valid_until):
 
 
 def set_user_sheet(user_id, sheet_id):
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_connection()
     conn.execute('''
         INSERT INTO user_sheet (user_id, sheet_id)
         VALUES (?, ?)
@@ -68,7 +73,7 @@ def set_user_sheet(user_id, sheet_id):
 
 
 def get_current_tab(user_id, sheet_id):
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_connection()
     cursor = conn.execute('''
         SELECT current_tab_name FROM user_sheet
         WHERE user_id = ? AND sheet_id = ?
@@ -82,7 +87,7 @@ def get_current_tab(user_id, sheet_id):
 
 
 def get_current_tab_valid_until(user_id, sheet_id):
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_connection()
     cursor = conn.execute('''
         SELECT valid_until FROM user_sheet
         WHERE user_id = ? AND sheet_id = ?
@@ -95,7 +100,7 @@ def get_current_tab_valid_until(user_id, sheet_id):
     return row[0]
 
 def save_user(user_id, email, access_token, refresh_token, token_expiry):
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_connection()
     conn.execute('''
         INSERT INTO users (id, email, access_token, refresh_token, token_expiry)
         VALUES (?, ?, ?, ?, ?)
@@ -110,7 +115,7 @@ def save_user(user_id, email, access_token, refresh_token, token_expiry):
 
 
 def get_user(user_id):
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_connection()
     cursor = conn.execute('SELECT id, email, access_token, refresh_token, token_expiry FROM users WHERE id = ?', (user_id,))
     row = cursor.fetchone()
     conn.close()
@@ -119,7 +124,7 @@ def get_user(user_id):
     return {"id": row[0], "email": row[1], "access_token": row[2], "refresh_token": row[3], "token_expiry": row[4]}
 
 def get_sheet_id(user_id):
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_connection()
     cursor = conn.execute('''
             SELECT sheet_id FROM user_sheet
             WHERE user_id = ? 
@@ -131,7 +136,7 @@ def get_sheet_id(user_id):
     return row[0]
 
 def get_categories(user_id):
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_connection()
     cursor = conn.execute('''
             SELECT category FROM user_categories
             WHERE user_id = ? 
@@ -141,7 +146,7 @@ def get_categories(user_id):
     return [row[0] for row in rows]
 
 def get_bills(user_id):
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_connection()
     cursor = conn.execute('''
             SELECT 
                 bill_name,
@@ -156,7 +161,7 @@ def get_bills(user_id):
 
 
 def set_category(user_id,category):
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_connection()
     conn.execute('''
         INSERT INTO user_categories (user_id,category)
         VALUES (?, ?)
@@ -165,7 +170,7 @@ def set_category(user_id,category):
     conn.close()
 
 def delete_category(user_id, category):
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_connection()
     conn.execute('''
         DELETE FROM user_categories WHERE user_id = ? AND category = ?
     ''', (user_id, category))
@@ -173,7 +178,7 @@ def delete_category(user_id, category):
     conn.close()
 
 def set_bill(user_id, bill_name, amount):
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_connection()
     conn.execute('''
         INSERT INTO user_bills (user_id, bill_name, amount)
         VALUES (?, ?, ?)
@@ -185,7 +190,7 @@ def set_bill(user_id, bill_name, amount):
 
 
 def delete_bill(user_id, bill_name):
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_connection()
     conn.execute('''
         DELETE FROM user_bills
         WHERE user_id = ? AND bill_name = ?

@@ -3,7 +3,7 @@ from functools import wraps
 import sheets as s
 import claude_client as cc
 import config as c
-from db import init_db,get_categories,set_category,delete_category,get_bills,set_bill,delete_bill,sync_bills
+from db import init_db,get_categories,set_category,delete_category,get_bills,set_bill,delete_bill,sync_bills,set_current_tab
 import auth
 
 app = Flask(__name__, static_folder='public')
@@ -70,6 +70,16 @@ def logout():
 @login_required
 def settings_page():
     return send_from_directory('public', 'settings.html')
+
+@app.route('/cycle')
+@login_required
+def cycle_page():
+    return send_from_directory('public', 'cycle.html')
+
+@app.route('/manage-bills')
+@login_required
+def manage_bills_page():
+    return send_from_directory('public', 'manage-bills.html')
 
 @app.route('/month-exists')
 @login_required
@@ -230,6 +240,113 @@ def remove_bill():
     
     delete_bill(user_id, bill['name'])
     return {"status": "removed"}
+
+
+@app.route('/current-cycle/income', methods=["GET"])
+@login_required
+def get_currentCycle_income():
+    user_id = session['user_id']
+    sheet_id = s.get_user_sheet_id(user_id)
+    tab_name = s.get_current_tab(user_id, sheet_id)
+    sheets_service = s.get_user_sheets_service(user_id)
+    if tab_name is None:
+        return {"error": "No active month found."}, 400
+
+    income = s.get_current_income(tab_name, sheets_service, sheet_id)
+    return {"income": income}
+    
+
+@app.route('/current-cycle/income/add', methods=["POST"])
+@login_required
+def add_income():
+    user_id = session['user_id']
+    sheet_id = s.get_user_sheet_id(user_id)
+    tab_name = s.get_current_tab(user_id, sheet_id)
+    sheets_service = s.get_user_sheets_service(user_id)
+    if tab_name is None:
+        return {"error": "No active month found."}, 400
+
+    new_entry = request.json['income']
+    existing = s.get_current_income(tab_name, sheets_service, sheet_id)
+    existing.append(new_entry)
+    s.replace_income(existing, tab_name, sheets_service, sheet_id)
+    return {"status": "added"}
+    
+@app.route('/current-cycle/income/remove', methods=["POST"])
+@login_required
+def remove_income():
+    user_id = session['user_id']
+    sheet_id = s.get_user_sheet_id(user_id)
+    tab_name = s.get_current_tab(user_id, sheet_id)
+    sheets_service = s.get_user_sheets_service(user_id)
+    if tab_name is None:
+        return {"error": "No active month found."}, 400
+
+    new_entry = request.json['income']
+    existing = s.get_current_income(tab_name, sheets_service, sheet_id)
+    existing = [entry for entry in existing if entry['name'] != new_entry['name']]
+    s.replace_income(existing, tab_name, sheets_service, sheet_id)
+    return {"status": "removed"}
+    
+@app.route('/current-cycle/savings', methods=["GET"])
+@login_required
+def get_currentCycle_savings():
+    user_id = session['user_id']
+    sheet_id = s.get_user_sheet_id(user_id)
+    tab_name = s.get_current_tab(user_id, sheet_id)
+    sheets_service = s.get_user_sheets_service(user_id)
+    if tab_name is None:
+        return {"error": "No active month found."}, 400
+
+    savings = s.get_current_savings(tab_name, sheets_service, sheet_id)
+    return {"savings": savings}
+    
+
+@app.route('/current-cycle/savings/add', methods=["POST"])
+@login_required
+def add_saving():
+    user_id = session['user_id']
+    sheet_id = s.get_user_sheet_id(user_id)
+    tab_name = s.get_current_tab(user_id, sheet_id)
+    sheets_service = s.get_user_sheets_service(user_id)
+    if tab_name is None:
+        return {"error": "No active month found."}, 400
+
+    new_entry = request.json['savings']
+    existing = s.get_current_savings(tab_name, sheets_service, sheet_id)
+    existing.append(new_entry)
+    s.replace_savings(existing, tab_name, sheets_service, sheet_id)
+    return {"status": "added"}
+    
+@app.route('/current-cycle/savings/remove', methods=["POST"])
+@login_required
+def remove_saving():
+    user_id = session['user_id']
+    sheet_id = s.get_user_sheet_id(user_id)
+    tab_name = s.get_current_tab(user_id, sheet_id)
+    sheets_service = s.get_user_sheets_service(user_id)
+    if tab_name is None:
+        return {"error": "No active month found."}, 400
+
+    new_entry = request.json['savings']
+    existing = s.get_current_savings(tab_name, sheets_service, sheet_id)
+    existing = [entry for entry in existing if entry['name'] != new_entry['name']]
+    s.replace_savings(existing, tab_name, sheets_service, sheet_id)
+    return {"status": "removed"}
+    
+@app.route('/current-cycle/dates', methods=["POST"])
+@login_required
+def update_current_dates():
+    user_id = session['user_id']
+    sheet_id = s.get_user_sheet_id(user_id)
+    tab_name = s.get_current_tab(user_id, sheet_id)
+    sheets_service = s.get_user_sheets_service(user_id)
+    if tab_name is None:
+        return {"error": "No active month found."}, 400
+
+    s.write_date(request.json,tab_name,sheets_service,sheet_id)
+    set_current_tab(user_id,sheet_id,tab_name,request.json['end_date'])
+    return {"status": "Updated"}
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000, debug=True)

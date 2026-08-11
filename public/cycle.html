@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ledger — Current Cycle</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#6552F5">
+<link rel="icon" href="/icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F6F5FA; --card: #FFFFFF; --ink: #16161F; --ink-soft: #6E6E85;
+    --accent: #6552F5; --accent-soft: #EDE9FE; --accent-2: #12B886;
+    --line: #EDEDF3; --alert: #E5484D; --radius: 20px; --radius-sm: 12px;
+    --display: 'Sora', sans-serif; --sans: 'Inter', sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg);
+    background-image: radial-gradient(circle at 12% -6%, rgba(101,82,245,0.14), transparent 42%);
+    color: var(--ink); font-family: var(--sans);
+    min-height: 100vh; display: flex; justify-content: center;
+    padding: 22px 14px 80px; -webkit-font-smoothing: antialiased;
+  }
+  .app { width: 100%; max-width: 430px; }
+  .banner {
+    background: linear-gradient(135deg, #FF8A5B, #E5484D);
+    border-radius: var(--radius); padding: 26px 22px 22px; margin-bottom: 16px;
+    position: relative; color: #fff; overflow: hidden;
+  }
+  .banner::after {
+    content: "🗓️"; position: absolute; right: -6px; bottom: -18px; font-size: 92px; opacity: 0.18;
+  }
+  .banner .back-link { color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 500; text-decoration: none; }
+  .banner .back-link:hover { color: #fff; }
+  .banner h1 { font-family: var(--display); font-size: 26px; font-weight: 800; margin: 14px 0 3px; position: relative; z-index: 1; }
+  .banner .sub { font-size: 13px; color: rgba(255,255,255,0.85); position: relative; z-index: 1; }
+  .card { background: var(--card); border-radius: var(--radius); padding: 20px; margin-bottom: 14px; box-shadow: 0 1px 2px rgba(22,22,31,0.04), 0 12px 28px -14px rgba(22,22,31,0.14); }
+  .card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .icon-badge { width: 42px; height: 42px; border-radius: 13px; display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0; background: var(--accent-soft); }
+  .card-head h2 { font-family: var(--display); font-size: 16.5px; font-weight: 700; margin: 0; }
+  label.field { display: block; font-size: 12px; font-weight: 500; color: var(--ink-soft); margin-bottom: 5px; }
+  .field-group { margin-bottom: 13px; }
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  input[type="text"], input[type="number"], input[type="date"] { width: 100%; padding: 11px 13px; border: 1.5px solid var(--line); border-radius: var(--radius-sm); background: #FBFBFD; font-family: var(--sans); font-size: 14.5px; color: var(--ink); }
+  input:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+  .item-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 13px; border: 1.5px solid var(--line); border-radius: var(--radius-sm); margin-bottom: 8px; font-size: 14px; }
+  .item-row .info { display: flex; flex-direction: column; }
+  .item-row .amount { font-family: var(--display); font-weight: 600; font-size: 12.5px; color: var(--ink-soft); }
+  .item-row button { width: auto; background: none; border: none; color: var(--alert); font-size: 12px; font-weight: 500; cursor: pointer; padding: 4px 6px; }
+  .item-row button:hover { text-decoration: underline; }
+  .add-row { display: flex; gap: 8px; margin-top: 8px; }
+  .add-row input { flex: 1; padding: 11px 13px; border: 1.5px solid var(--line); border-radius: var(--radius-sm); background: #FBFBFD; font-family: var(--sans); font-size: 14px; color: var(--ink); }
+  .add-row input:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+  .add-row button { width: auto; padding: 11px 18px; border-radius: 999px; border: none; background: var(--accent); color: #fff; font-family: var(--display); font-size: 12.5px; font-weight: 700; cursor: pointer; }
+  .add-row button:hover { opacity: 0.92; }
+  button.wide { width: 100%; padding: 12px 16px; border-radius: 999px; border: none; background: var(--accent); color: #fff; font-family: var(--display); font-size: 13.5px; font-weight: 700; cursor: pointer; margin-top: 6px; }
+  button.wide:hover { opacity: 0.92; }
+  .subhead { font-family: var(--display); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); margin: 4px 0 10px; }
+  .divider { border: none; border-top: 1px solid var(--line); margin: 18px 0; }
+  .status-line { margin-top: 12px; font-size: 12.5px; text-align: center; min-height: 16px; color: var(--ink-soft); font-weight: 500; }
+  .status-line.success { color: var(--accent-2); }
+  .status-line.error { color: var(--alert); }
+  .empty-hint { font-size: 12.5px; color: var(--ink-soft); text-align: center; padding: 10px 0; }
+</style>
+</head>
+<body>
+  <div class="app">
+    <div class="banner">
+      <a class="back-link" href="/">‹ Back</a>
+      <h1>Current Cycle</h1>
+      <div class="sub">Adjust this cycle's dates, income, and savings.</div>
+    </div>
+
+    <div class="card" id="lockedMessage" style="display:none; text-align:center;">
+      <div class="icon-badge" style="margin:0 auto 12px;">🔒</div>
+      <h2 style="margin-bottom:6px;">No cycle yet</h2>
+      <p style="font-size:13px; color:var(--ink-soft); margin:0 0 16px;">Open your first cycle before editing dates, income, or savings.</p>
+      <a href="/" style="display:inline-block; padding:11px 20px; border-radius:999px; background:var(--accent); color:#fff; font-family:var(--display); font-weight:700; font-size:13px; text-decoration:none;">Go to Home</a>
+    </div>
+
+    <div id="cycleContent">
+    <div class="card">
+      <div class="card-head">
+        <div class="icon-badge">🗓️</div>
+        <h2>Cycle Dates</h2>
+      </div>
+
+      <div class="field-group row-2">
+        <div>
+          <label class="field" for="cycleStartDate">Start date</label>
+          <input type="date" id="cycleStartDate">
+        </div>
+        <div>
+          <label class="field" for="cycleEndDate">End date</label>
+          <input type="date" id="cycleEndDate">
+        </div>
+      </div>
+
+      <button class="wide" onclick="updateDates()">Update Dates</button>
+      <div class="status-line" id="datesStatusLine"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="icon-badge">💰</div>
+        <h2>Income &amp; Savings</h2>
+      </div>
+
+      <div class="subhead">Income</div>
+      <div id="cycleIncomeList"></div>
+      <div class="empty-hint" id="emptyIncomeHint" style="display:none;">No income sources yet.</div>
+      <div class="add-row">
+        <input type="text" id="newIncomeName" placeholder="Name">
+        <input type="number" id="newIncomeAmount" placeholder="Amount">
+        <button type="button" onclick="addIncome()">+</button>
+      </div>
+
+      <hr class="divider">
+
+      <div class="subhead">Savings</div>
+      <div id="cycleSavingsList"></div>
+      <div class="empty-hint" id="emptySavingsHint" style="display:none;">No savings entries yet.</div>
+      <div class="add-row">
+        <input type="text" id="newSavingsName" placeholder="Name">
+        <input type="number" id="newSavingsAmount" placeholder="Amount">
+        <button type="button" onclick="addSavings()">+</button>
+      </div>
+
+      <div class="status-line" id="cycleStatusLine"></div>
+    </div>
+    </div>
+  </div>
+
+<script>
+  fetch('/cycle-status')
+    .then(res => res.json())
+    .then(data => {
+      if (!data.active) {
+        document.getElementById('cycleContent').style.display = 'none';
+        document.getElementById('lockedMessage').style.display = 'block';
+      }
+    })
+    .catch(() => {
+      document.getElementById('cycleContent').style.display = 'none';
+      document.getElementById('lockedMessage').style.display = 'block';
+    });
+
+  const datesStatusLine = document.getElementById('datesStatusLine');
+
+  function updateDates() {
+    const start_date = document.getElementById('cycleStartDate').value;
+    const end_date = document.getElementById('cycleEndDate').value;
+
+    if (!start_date || !end_date) {
+      datesStatusLine.textContent = 'Pick both dates first.';
+      datesStatusLine.className = 'status-line error';
+      return;
+    }
+
+    datesStatusLine.textContent = 'Updating…';
+    datesStatusLine.className = 'status-line';
+
+    fetch('/current-cycle/dates', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ start_date, end_date }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'Updated') {
+          datesStatusLine.textContent = 'Dates updated.';
+          datesStatusLine.className = 'status-line success';
+        } else {
+          datesStatusLine.textContent = data.error || 'Could not update dates.';
+          datesStatusLine.className = 'status-line error';
+        }
+      })
+      .catch(err => {
+        datesStatusLine.textContent = 'Error: ' + err.message;
+        datesStatusLine.className = 'status-line error';
+      });
+  }
+
+  const cycleIncomeList = document.getElementById('cycleIncomeList');
+  const emptyIncomeHint = document.getElementById('emptyIncomeHint');
+  const cycleStatusLine = document.getElementById('cycleStatusLine');
+
+  function loadCurrentIncome() {
+    fetch('/current-cycle/income')
+      .then(res => res.json())
+      .then(data => renderIncome(data.income || []))
+      .catch(() => {
+        cycleIncomeList.innerHTML = '';
+        emptyIncomeHint.style.display = 'block';
+        emptyIncomeHint.textContent = 'No active cycle right now.';
+      });
+  }
+
+  function renderIncome(entries) {
+    cycleIncomeList.innerHTML = '';
+    if (entries.length === 0) {
+      emptyIncomeHint.style.display = 'block';
+      emptyIncomeHint.textContent = 'No income sources yet.';
+      return;
+    }
+    emptyIncomeHint.style.display = 'none';
+
+    entries.forEach(entry => {
+      const row = document.createElement('div');
+      row.className = 'item-row';
+
+      const info = document.createElement('div');
+      info.className = 'info';
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = entry.name;
+      const amountSpan = document.createElement('span');
+      amountSpan.className = 'amount';
+      amountSpan.textContent = Number(entry.amount).toFixed(2);
+      info.appendChild(nameSpan);
+      info.appendChild(amountSpan);
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.textContent = '× remove';
+      removeBtn.addEventListener('click', () => removeIncome(entry.name));
+
+      row.appendChild(info);
+      row.appendChild(removeBtn);
+      cycleIncomeList.appendChild(row);
+    });
+  }
+
+  function addIncome() {
+    const name = document.getElementById('newIncomeName').value.trim();
+    const amount = parseFloat(document.getElementById('newIncomeAmount').value);
+
+    if (!name || isNaN(amount)) {
+      cycleStatusLine.textContent = 'Enter a name and amount first.';
+      cycleStatusLine.className = 'status-line error';
+      return;
+    }
+
+    cycleStatusLine.textContent = 'Adding…';
+    cycleStatusLine.className = 'status-line';
+
+    fetch('/current-cycle/income/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ income: { name, amount } }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'added') {
+          cycleStatusLine.textContent = 'Income added.';
+          cycleStatusLine.className = 'status-line success';
+          document.getElementById('newIncomeName').value = '';
+          document.getElementById('newIncomeAmount').value = '';
+          loadCurrentIncome();
+        } else {
+          cycleStatusLine.textContent = data.error || 'Could not add income.';
+          cycleStatusLine.className = 'status-line error';
+        }
+      })
+      .catch(err => {
+        cycleStatusLine.textContent = 'Error: ' + err.message;
+        cycleStatusLine.className = 'status-line error';
+      });
+  }
+
+  function removeIncome(name) {
+    cycleStatusLine.textContent = 'Removing…';
+    cycleStatusLine.className = 'status-line';
+
+    fetch('/current-cycle/income/remove', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ income: { name } }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'removed') {
+          cycleStatusLine.textContent = 'Removed.';
+          cycleStatusLine.className = 'status-line success';
+          loadCurrentIncome();
+        } else {
+          cycleStatusLine.textContent = data.error || 'Could not remove income.';
+          cycleStatusLine.className = 'status-line error';
+        }
+      })
+      .catch(err => {
+        cycleStatusLine.textContent = 'Error: ' + err.message;
+        cycleStatusLine.className = 'status-line error';
+      });
+  }
+
+  const cycleSavingsList = document.getElementById('cycleSavingsList');
+  const emptySavingsHint = document.getElementById('emptySavingsHint');
+
+  function loadCurrentSavings() {
+    fetch('/current-cycle/savings')
+      .then(res => res.json())
+      .then(data => renderSavings(data.savings || []))
+      .catch(() => {
+        cycleSavingsList.innerHTML = '';
+        emptySavingsHint.style.display = 'block';
+        emptySavingsHint.textContent = 'No active cycle right now.';
+      });
+  }
+
+  function renderSavings(entries) {
+    cycleSavingsList.innerHTML = '';
+    if (entries.length === 0) {
+      emptySavingsHint.style.display = 'block';
+      emptySavingsHint.textContent = 'No savings entries yet.';
+      return;
+    }
+    emptySavingsHint.style.display = 'none';
+
+    entries.forEach(entry => {
+      const row = document.createElement('div');
+      row.className = 'item-row';
+
+      const info = document.createElement('div');
+      info.className = 'info';
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = entry.name;
+      const amountSpan = document.createElement('span');
+      amountSpan.className = 'amount';
+      amountSpan.textContent = Number(entry.amount).toFixed(2);
+      info.appendChild(nameSpan);
+      info.appendChild(amountSpan);
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.textContent = '× remove';
+      removeBtn.addEventListener('click', () => removeSavings(entry.name));
+
+      row.appendChild(info);
+      row.appendChild(removeBtn);
+      cycleSavingsList.appendChild(row);
+    });
+  }
+
+  function addSavings() {
+    const name = document.getElementById('newSavingsName').value.trim();
+    const amount = parseFloat(document.getElementById('newSavingsAmount').value);
+
+    if (!name || isNaN(amount)) {
+      cycleStatusLine.textContent = 'Enter a name and amount first.';
+      cycleStatusLine.className = 'status-line error';
+      return;
+    }
+
+    cycleStatusLine.textContent = 'Adding…';
+    cycleStatusLine.className = 'status-line';
+
+    fetch('/current-cycle/savings/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ savings: { name, amount } }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'added') {
+          cycleStatusLine.textContent = 'Savings added.';
+          cycleStatusLine.className = 'status-line success';
+          document.getElementById('newSavingsName').value = '';
+          document.getElementById('newSavingsAmount').value = '';
+          loadCurrentSavings();
+        } else {
+          cycleStatusLine.textContent = data.error || 'Could not add savings.';
+          cycleStatusLine.className = 'status-line error';
+        }
+      })
+      .catch(err => {
+        cycleStatusLine.textContent = 'Error: ' + err.message;
+        cycleStatusLine.className = 'status-line error';
+      });
+  }
+
+  function removeSavings(name) {
+    cycleStatusLine.textContent = 'Removing…';
+    cycleStatusLine.className = 'status-line';
+
+    fetch('/current-cycle/savings/remove', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ savings: { name } }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'removed') {
+          cycleStatusLine.textContent = 'Removed.';
+          cycleStatusLine.className = 'status-line success';
+          loadCurrentSavings();
+        } else {
+          cycleStatusLine.textContent = data.error || 'Could not remove savings.';
+          cycleStatusLine.className = 'status-line error';
+        }
+      })
+      .catch(err => {
+        cycleStatusLine.textContent = 'Error: ' + err.message;
+        cycleStatusLine.className = 'status-line error';
+      });
+  }
+
+  loadCurrentIncome();
+  loadCurrentSavings();
+</script>
+</body>
+</html>
