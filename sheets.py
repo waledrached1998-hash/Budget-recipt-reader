@@ -341,15 +341,16 @@ def replace_savings(entries, sheet_tab, sheets_service, sheet_id):
             ).execute()
         current_row = current_row +1
 
-    def get_current_dates(sheet_tab, sheets_service, sheet_id):
-        result = sheets_service.spreadsheets().values().get(
-            spreadsheetId=sheet_id,
-            range=f"{sheet_tab}!G9:G10"
-        ).execute()
-        values = result.get('values', [])
-        start_date = values[0][0] if len(values) > 0 else ''
-        end_date = values[1][0] if len(values) > 1 else ''
-        return {"start_date": start_date, "end_date": end_date}
+
+def get_current_dates(sheet_tab, sheets_service, sheet_id):
+    result = sheets_service.spreadsheets().values().get(
+        spreadsheetId=sheet_id,
+        range=f"{sheet_tab}!G9:G10"
+    ).execute()
+    values = result.get('values', [])
+    start_date = values[0][0] if len(values) > 0 else ''
+    end_date = values[1][0] if len(values) > 1 else ''
+    return {"start_date": start_date, "end_date": end_date}
 
     
 
