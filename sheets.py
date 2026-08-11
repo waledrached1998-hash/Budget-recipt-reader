@@ -246,7 +246,8 @@ def get_current_income(sheet_tab, sheets_service, sheet_id):
     ).execute()
     income_result_value = sheets_service.spreadsheets().values().get(
             spreadsheetId = sheet_id,
-            range = f"{sheet_tab}!J27:J36"
+            range =f"{sheet_tab}!J27:J36",
+            valueRenderOption='UNFORMATTED_VALUE'
     ).execute()
     
     income_name = income_result_name.get('values', [])
@@ -297,7 +298,8 @@ def get_current_savings(sheet_tab, sheets_service, sheet_id):
     ).execute()
     savings_result_value = sheets_service.spreadsheets().values().get(
         spreadsheetId = sheet_id,
-        range =f"{sheet_tab}!J42:J56"
+        range =f"{sheet_tab}!J42:J56",
+        valueRenderOption='UNFORMATTED_VALUE'
     ).execute()
     savings_name = savings_result_name.get('values',[])
     savings_value = savings_result_value.get('values',[])
