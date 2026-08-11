@@ -135,6 +135,14 @@
   </div>
 
 <script>
+  fetch('/current-cycle/dates')
+    .then(res => res.json())
+    .then(data => {
+      if (data.start_date) document.getElementById('cycleStartDate').value = data.start_date;
+      if (data.end_date) document.getElementById('cycleEndDate').value = data.end_date;
+    })
+    .catch(err => console.error('Could not load current dates:', err));
+
   fetch('/cycle-status')
     .then(res => res.json())
     .then(data => {

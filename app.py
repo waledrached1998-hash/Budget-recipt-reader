@@ -333,6 +333,19 @@ def remove_saving():
     existing = [entry for entry in existing if entry['name'] != new_entry['name']]
     s.replace_savings(existing, tab_name, sheets_service, sheet_id)
     return {"status": "removed"}
+
+@app.route('/current-cycle/dates', methods=["GET"])
+@login_required
+def get_current_cycle_dates():
+    user_id = session['user_id']
+    sheet_id = s.get_user_sheet_id(user_id)
+    tab_name = s.get_current_tab(user_id, sheet_id)
+    sheets_service = s.get_user_sheets_service(user_id)
+    if tab_name is None:
+        return {"error": "No active month found."}, 400
+
+    dates = s.get_current_dates(tab_name, sheets_service, sheet_id)
+    return dates
     
 @app.route('/current-cycle/dates', methods=["POST"])
 @login_required
