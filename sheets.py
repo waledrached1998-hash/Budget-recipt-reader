@@ -242,7 +242,7 @@ def sync_categories_to_sheet(user_id, sheets_service, sheet_id):
 def get_current_income(sheet_tab, sheets_service, sheet_id):
     income_result_name = sheets_service.spreadsheets().values().get(
         spreadsheetId = sheet_id,
-        range = f"{sheet_tab}!E27:E36"
+        range = f"{sheet_tab}!D27:E36"
     ).execute()
     income_result_value = sheets_service.spreadsheets().values().get(
             spreadsheetId = sheet_id,
@@ -293,7 +293,7 @@ def replace_income(entries, sheet_tab, sheets_service, sheet_id):
 def get_current_savings(sheet_tab, sheets_service, sheet_id):
     savings_result_name = sheets_service.spreadsheets().values().get(
         spreadsheetId = sheet_id,
-        range =f"{sheet_tab}!E42:E56"
+        range =f"{sheet_tab}!D42:E56"
     ).execute()
     savings_result_value = sheets_service.spreadsheets().values().get(
         spreadsheetId = sheet_id,
