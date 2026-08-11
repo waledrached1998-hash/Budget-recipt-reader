@@ -6,6 +6,7 @@ from db import get_current_tab as db_get_current_tab, get_sheet_id, get_user, se
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from google.auth.transport.requests import Request
+from datetime import datetime, timedelta
 
 
 DEFAULT_CATEGORIES = ["Groceries","Take out & restaurants","Going out","Clothing","Electronics","Home essentials","Medicine","Gifts","Transportation","Other"]
@@ -341,19 +342,20 @@ def replace_savings(entries, sheet_tab, sheets_service, sheet_id):
             ).execute()
         current_row = current_row +1
 
-
 def get_current_dates(sheet_tab, sheets_service, sheet_id):
     result = sheets_service.spreadsheets().values().get(
         spreadsheetId=sheet_id,
-        range=f"{sheet_tab}!G9:G10"
+        range=f"{sheet_tab}!G9:G10",
+        valueRenderOption='UNFORMATTED_VALUE'
     ).execute()
     values = result.get('values', [])
-    start_date = values[0][0] if len(values) > 0 else ''
-    end_date = values[1][0] if len(values) > 1 else ''
+
+    def to_iso(raw):
+        if isinstance(raw, (int, float)):
+            date_obj = datetime(1899, 12, 30) + timedelta(days=raw)
+            return date_obj.strftime('%Y-%m-%d')
+        return raw
+
+    start_date = to_iso(values[0][0]) if len(values) > 0 else ''
+    end_date = to_iso(values[1][0]) if len(values) > 1 else ''
     return {"start_date": start_date, "end_date": end_date}
-
-    
-
-   
-
-
