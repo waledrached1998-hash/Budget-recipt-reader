@@ -264,7 +264,7 @@ def replace_income(entries, sheet_tab, sheets_service, sheet_id):
     body = {
             "valueInputOption": "USER_ENTERED",
             "data": [
-                    {"range": f"{sheet_tab}!E27:E36", "values": clear_values},
+                    {"range": f"{sheet_tab}!D27:E36", "values": clear_values},
                     {"range": f"{sheet_tab}!G27:G36", "values": clear_values},
                     {"range": f"{sheet_tab}!J27:J36", "values": clear_values}
                 ]
@@ -316,7 +316,7 @@ def replace_savings(entries, sheet_tab, sheets_service, sheet_id):
     body = {
         "valueInputOption": "USER_ENTERED",
         "data" : [
-            {"range":f"{sheet_tab}!E42:E56","values" : clear_values},
+            {"range":f"{sheet_tab}!D42:E56","values" : clear_values},
             {"range":f"{sheet_tab}!G42:G56","values":clear_values},
             {"range":f"{sheet_tab}!J42:J56","values":clear_values}
         ] 
