@@ -60,7 +60,7 @@ def write_income(request_json, sheet_tab,sheets_service,sheet_id,cycle_id):
 def write_savings(request_json, sheet_tab,sheets_service,sheet_id,cycle_id):
     savings_result = sheets_service.spreadsheets().values().get(
         spreadsheetId=sheet_id,
-        range=f"{sheet_tab}D42:E56"
+        range=f"{sheet_tab}!D42:E56"
     ).execute()
     values = savings_result.get('values', [])
     current_savings_row = 42 + len(values)
