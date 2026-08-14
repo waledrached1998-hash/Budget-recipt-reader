@@ -2,7 +2,7 @@ import config as c
 from flask import session
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-from db import get_current_tab as db_get_current_tab, get_sheet_id, get_user, set_current_tab,get_current_tab_valid_until,set_user_sheet,save_user,set_category,get_categories
+from db import  get_current_tab, get_sheet_id, get_user, set_current_tab,get_current_tab_valid_until,set_user_sheet,save_user,set_category,get_categories,add_cycle,set_cycle_income,set_cycle_savings,get_cycle_income,get_cycle_savings,set_cycle_expense
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from google.auth.transport.requests import Request
@@ -18,10 +18,6 @@ def duplicate_template_tab(request_json,new_sheet_name,sheets_service,sheet_id,u
     for sheet in result['sheets']:
         if sheet['properties']['title'] == 'Budget I':
             prime_tab_id = sheet['properties']['sheetId']
-
-    if does_tab_exist(new_sheet_name,sheets_service,sheet_id):
-        return {"status": "already exists"}, 400
-
     body = {
         "requests": [
             {
@@ -34,10 +30,14 @@ def duplicate_template_tab(request_json,new_sheet_name,sheets_service,sheet_id,u
         ]
     }
     sheets_service.spreadsheets().batchUpdate(spreadsheetId=sheet_id, body=body).execute()
-    set_current_tab(user_id,sheet_id,new_sheet_name,request_json['end_date'])
+    cycle_id = add_cycle(user_id,sheet_id,request_json['start_date'],request_json['end_date'],new_sheet_name)
+
+    set_current_tab(user_id,sheet_id,cycle_id)
+    return cycle_id
 
 
-def write_income(request_json, sheet_tab,sheets_service,sheet_id):
+def write_income(request_json, sheet_tab,sheets_service,sheet_id,cycle_id):
+    
     income_result = sheets_service.spreadsheets().values().get(
         spreadsheetId=sheet_id,
         range=f"{sheet_tab}!E27:E37"
@@ -54,14 +54,15 @@ def write_income(request_json, sheet_tab,sheets_service,sheet_id):
             ]
         }
         sheets_service.spreadsheets().values().batchUpdate(spreadsheetId=sheet_id, body=body).execute()
+        set_cycle_income(cycle_id,entry['name'],entry['amount'])
         current_income_row = current_income_row+1
 
-def write_savings(request_json, sheet_tab,sheets_service,sheet_id):
-    income_result = sheets_service.spreadsheets().values().get(
+def write_savings(request_json, sheet_tab,sheets_service,sheet_id,cycle_id):
+    savings_result = sheets_service.spreadsheets().values().get(
         spreadsheetId=sheet_id,
         range=f"{sheet_tab}!E42:E57"
     ).execute()
-    values = income_result.get('values', [])
+    values = savings_result.get('values', [])
     current_savings_row = 42 + len(values)
     for entry in request_json['savings']:
         body = {
@@ -73,6 +74,7 @@ def write_savings(request_json, sheet_tab,sheets_service,sheet_id):
             ]
         }
         sheets_service.spreadsheets().values().batchUpdate(spreadsheetId=sheet_id, body=body).execute()
+        set_cycle_savings(cycle_id,entry['name'],entry['amount'])
         current_savings_row = current_savings_row+1
 
 def write_date(request_json, sheet_tab,sheets_service,sheet_id):
@@ -86,7 +88,7 @@ def write_date(request_json, sheet_tab,sheets_service,sheet_id):
     sheets_service.spreadsheets().values().batchUpdate(spreadsheetId=sheet_id, body=body).execute()
 
 
-def write_expenses(parsed, sheet_tab,sheets_service,sheet_id):
+def write_expenses(parsed, sheet_tab,sheets_service,sheet_id,cycle_id):
     result = sheets_service.spreadsheets().values().get(
         spreadsheetId=sheet_id,
         range=f"{sheet_tab}!G62:G322"
@@ -105,6 +107,7 @@ def write_expenses(parsed, sheet_tab,sheets_service,sheet_id):
             ]
         }
         sheets_service.spreadsheets().values().batchUpdate(spreadsheetId=sheet_id, body=body).execute()
+        set_cycle_expense(cycle_id,category,total)
         current_row = current_row + 1
 
 
@@ -143,10 +146,10 @@ def does_tab_exist(tab_name,sheets_service,sheet_id):
     return False
 
 
-def get_current_tab(user_id,sheet_id):
-    title = db_get_current_tab(user_id,sheet_id)
 
-    return title
+
+
+
 
 def get_current_tab_still_valid(user_id,sheet_id):
     valid_until_str = get_current_tab_valid_until(user_id, sheet_id)
@@ -236,27 +239,12 @@ def write_categories_to_tab (tab_name,sheets_service,categories,sheet_id):
 def sync_categories_to_sheet(user_id, sheets_service, sheet_id):
     categories = get_categories(user_id)
     write_categories_to_tab('Budget I',sheets_service,categories,sheet_id)
-    current_tab = get_current_tab(user_id, sheet_id)
+    current_tab =  get_current_tab(user_id,sheet_id)
     if current_tab is not None :
-        write_categories_to_tab(current_tab,sheets_service,categories,sheet_id)
+        write_categories_to_tab(current_tab['tab_name'],sheets_service,categories,sheet_id)
 
-def get_current_income(sheet_tab, sheets_service, sheet_id):
-    income_result_name = sheets_service.spreadsheets().values().get(
-        spreadsheetId = sheet_id,
-        range = f"{sheet_tab}!D27:E36"
-    ).execute()
-    income_result_value = sheets_service.spreadsheets().values().get(
-            spreadsheetId = sheet_id,
-            range =f"{sheet_tab}!J27:J36",
-            valueRenderOption='UNFORMATTED_VALUE'
-    ).execute()
-    
-    income_name = income_result_name.get('values', [])
-    income_value = income_result_value.get('values', [])
-    entries = []
-    for name_row, amount_row in zip(income_name, income_value):
-        entries.append({"name": name_row[0], "amount": amount_row[0]})
-
+def get_current_income(cycle_id):
+    entries = get_cycle_income(cycle_id)
     return entries  
 
 def replace_income(entries, sheet_tab, sheets_service, sheet_id):
@@ -292,23 +280,8 @@ def replace_income(entries, sheet_tab, sheets_service, sheet_id):
 
     # write the given entries starting at row 27
 
-def get_current_savings(sheet_tab, sheets_service, sheet_id):
-    savings_result_name = sheets_service.spreadsheets().values().get(
-        spreadsheetId = sheet_id,
-        range =f"{sheet_tab}!D42:E56"
-    ).execute()
-    savings_result_value = sheets_service.spreadsheets().values().get(
-        spreadsheetId = sheet_id,
-        range =f"{sheet_tab}!J42:J56",
-        valueRenderOption='UNFORMATTED_VALUE'
-    ).execute()
-    savings_name = savings_result_name.get('values',[])
-    savings_value = savings_result_value.get('values',[])
-
-    entries = []
-    for name,value in zip(savings_name,savings_value):
-        entries.append({'name':name[0],'amount':value[0]})
-
+def get_current_savings(cycle_id):
+    entries = get_cycle_savings(cycle_id)
     return entries
 
 def replace_savings(entries, sheet_tab, sheets_service, sheet_id):
@@ -342,20 +315,3 @@ def replace_savings(entries, sheet_tab, sheets_service, sheet_id):
             ).execute()
         current_row = current_row +1
 
-def get_current_dates(sheet_tab, sheets_service, sheet_id):
-    result = sheets_service.spreadsheets().values().get(
-        spreadsheetId=sheet_id,
-        range=f"{sheet_tab}!G9:G10",
-        valueRenderOption='UNFORMATTED_VALUE'
-    ).execute()
-    values = result.get('values', [])
-
-    def to_iso(raw):
-        if isinstance(raw, (int, float)):
-            date_obj = datetime(1899, 12, 30) + timedelta(days=raw)
-            return date_obj.strftime('%Y-%m-%d')
-        return raw
-
-    start_date = to_iso(values[0][0]) if len(values) > 0 else ''
-    end_date = to_iso(values[1][0]) if len(values) > 1 else ''
-    return {"start_date": start_date, "end_date": end_date}
