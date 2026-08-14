@@ -72,10 +72,10 @@ def migrate_user(user_id, sheet_id):
     cycle_id = add_cycle(user_id, sheet_id, start_date, end_date, tab_name)
     set_current_tab(user_id, sheet_id, cycle_id)
 
-    for name_row, amount_row in read_pairs(sheets_service, sheet_id, tab_name, "E27:E36", "J27:J36"):
+    for name_row, amount_row in read_pairs(sheets_service, sheet_id, tab_name, "D27:E36", "J27:J36"):
         set_cycle_income(cycle_id, name_row[0], amount_row[0])
 
-    for name_row, amount_row in read_pairs(sheets_service, sheet_id, tab_name, "E42:E56", "J42:J56"):
+    for name_row, amount_row in read_pairs(sheets_service, sheet_id, tab_name, "D42:E56", "J42:J56"):
         set_cycle_savings(cycle_id, name_row[0], amount_row[0])
 
     for category_row, amount_row in read_pairs(sheets_service, sheet_id, tab_name, "I62:I322", "G62:G322"):
