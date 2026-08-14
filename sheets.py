@@ -2,7 +2,7 @@ import config as c
 from flask import session
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-from db import  get_current_tab, get_sheet_id, get_user, set_current_tab,get_current_tab_valid_until,set_user_sheet,save_user,set_category,get_categories,add_cycle,set_cycle_income,set_cycle_savings,get_cycle_income,get_cycle_savings,set_cycle_expense
+from db import  get_current_tab, get_sheet_id, get_user, set_current_tab,get_current_tab_valid_until,set_user_sheet,save_user,set_category,get_categories,add_cycle,set_cycle_income,set_cycle_savings,get_cycle_income,get_cycle_savings,set_cycle_expense,update_debt_amount_left_to_pay,set_cycle_debt
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from google.auth.transport.requests import Request
@@ -315,3 +315,25 @@ def replace_savings(entries, sheet_tab, sheets_service, sheet_id):
             ).execute()
         current_row = current_row +1
 
+
+
+def write_debt_payment(debt,tab, sheets_service, sheet_id,user_id):
+
+    sheet_tab = tab['tab_name']
+    result = sheets_service.spreadsheets().values().get(
+        spreadsheetId=sheet_id,
+        range=f"{sheet_tab}!AC17:AC56"
+    ).execute()
+    values = result.get('values', [])
+    current_row = 17 + len(values)
+
+    body = {
+        "valueInputOption": "USER_ENTERED",
+        "data": [
+            {"range": f"{sheet_tab}!AC{current_row}", "values": [[debt['debt_name']]]},
+            {"range": f"{sheet_tab}!AH{current_row}", "values": [[debt['payment_amount']]]}
+        ]
+    }
+    sheets_service.spreadsheets().values().batchUpdate(spreadsheetId=sheet_id, body=body).execute()
+    update_debt_amount_left_to_pay(user_id,debt['debt_id'],debt['payment_amount'])
+    set_cycle_debt(tab['cycle_id'],debt['debt_id'],debt['debt_name'],debt['payment_amount'])

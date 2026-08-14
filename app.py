@@ -15,7 +15,12 @@ from db import (
     update_cycle,
     get_current_cycle,
     delete_cycle_income,
-    delete_cycle_savings
+    delete_cycle_savings,
+    get_user_debts,
+    add_debt,
+    delete_debt,
+    update_debt
+    
 )
 
 app = Flask(__name__, static_folder='public')
@@ -424,6 +429,72 @@ def remove_bill():
     bill = request.json['bill']
     delete_bill(user_id, bill['name'])
     return {"status": "removed"}
+
+
+
+# ---------------------------------------------------------------------------
+# Debts
+# ---------------------------------------------------------------------------
+
+@app.route('/debt')
+@login_required
+def debt_page():
+    return send_from_directory('public', 'debt.html')
+
+@app.route('/debts', methods=["GET"])
+@login_required
+def list_debts():
+    debts = get_user_debts(session['user_id'])
+    return {"debts": debts}
+
+
+@app.route('/debts/add', methods=["POST"])
+@login_required
+def add_debts():
+    user_id = session['user_id']
+    data = request.json
+    debt = data['debt']
+    add_debt(user_id, debt['debt_name'], debt['amount'], debt['amount'])
+    return {"status": "added"}
+
+
+@app.route('/debts/update', methods=["POST"])
+@login_required
+def update_debts():
+    user_id = session['user_id']
+    data = request.json
+    debt = data['debt']
+    update_debt(user_id,debt['debt_id'],debt['amount'],debt['amount_left_to_pay'])
+    return {"status": "updated"}
+
+
+@app.route('/debts/remove', methods=["POST"])
+@login_required
+def remove_debt():
+    user_id = session['user_id']
+    data = request.json
+    debt = data['debt']
+    delete_debt(user_id, debt['debt_id'])
+    return {"status": "removed"}
+
+
+@app.route('/debts/make-a-payment', methods=["POST"])
+@login_required
+def make_payment():
+    user_id = session['user_id']
+    sheet_id = s.get_user_sheet_id(user_id)
+    tab = s.get_current_tab(user_id, sheet_id)
+    sheets_service = s.get_user_sheets_service(user_id)
+    if tab is None:
+        return {"error": "No active month found."}, 400
+
+    data = request.json
+    debt = data['debt']
+    s.write_debt_payment(debt,tab,sheets_service,sheet_id,user_id)
+    return {"status": "payment recorded"}
+
+
+
 
 
 # ---------------------------------------------------------------------------

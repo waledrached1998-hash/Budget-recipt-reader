@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ledger — Debt Tracking</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#D97706">
+<link rel="icon" href="/icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F6F5FA; --card: #FFFFFF; --ink: #16161F; --ink-soft: #6E6E85;
+    --accent: #6552F5; --accent-soft: #EDE9FE; --accent-2: #12B886;
+    --line: #EDEDF3; --alert: #E5484D; --alert-soft: #FDE7E8;
+    --radius: 20px; --radius-sm: 12px;
+    --display: 'Sora', sans-serif; --sans: 'Inter', sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg);
+    background-image: radial-gradient(circle at 100% 0%, rgba(217,119,6,0.10), transparent 40%);
+    color: var(--ink); font-family: var(--sans);
+    min-height: 100vh; display: flex; justify-content: center;
+    padding: 22px 14px 80px; -webkit-font-smoothing: antialiased;
+  }
+  .app { width: 100%; max-width: 430px; }
+
+  .banner {
+    background: linear-gradient(135deg, #F5A623, #D97706);
+    border-radius: var(--radius); padding: 26px 22px 22px; margin-bottom: 16px;
+    position: relative; color: #fff; overflow: hidden;
+  }
+  .banner::after {
+    content: "💳"; position: absolute; right: -6px; bottom: -18px; font-size: 92px; opacity: 0.18;
+  }
+  .banner .back-link { color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 500; text-decoration: none; }
+  .banner .back-link:hover { color: #fff; }
+  .banner h1 { font-family: var(--display); font-size: 26px; font-weight: 800; margin: 14px 0 3px; position: relative; z-index: 1; }
+  .banner .sub { font-size: 13px; color: rgba(255,255,255,0.85); position: relative; z-index: 1; }
+
+  .card { background: var(--card); border-radius: var(--radius); padding: 20px; margin-bottom: 14px; box-shadow: 0 1px 2px rgba(22,22,31,0.04), 0 12px 28px -14px rgba(22,22,31,0.14); }
+  .card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .icon-badge { width: 42px; height: 42px; border-radius: 13px; display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0; background: #FEF3C7; }
+  .card-head h2 { font-family: var(--display); font-size: 16.5px; font-weight: 700; margin: 0; }
+
+  .debt-row {
+    border: 1.5px solid var(--line); border-radius: var(--radius-sm);
+    padding: 14px; margin-bottom: 10px;
+  }
+  .debt-row .debt-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  .debt-row .debt-name { font-family: var(--display); font-weight: 700; font-size: 14.5px; }
+  .debt-row .debt-total { font-size: 11.5px; color: var(--ink-soft); }
+  .debt-row .debt-remaining {
+    font-family: var(--display); font-weight: 700; font-size: 13px;
+    color: #D97706; margin-bottom: 10px;
+  }
+  .debt-row .debt-remaining.paid-off { color: var(--accent-2); }
+
+  .paid-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: #E1F7EE; color: var(--accent-2); font-family: var(--display); font-weight: 700;
+    font-size: 12px; padding: 8px 12px; border-radius: 999px; width: 100%; justify-content: center;
+  }
+
+  .payment-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .payment-row input {
+    flex: 1; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: var(--radius-sm);
+    background: #FBFBFD; font-family: var(--sans); font-size: 14px; color: var(--ink);
+  }
+  .payment-row input:focus-visible { outline: none; border-color: #D97706; box-shadow: 0 0 0 4px #FEF3C7; }
+  .payment-row button {
+    width: auto; padding: 10px 16px; border-radius: var(--radius-sm); border: none;
+    background: #D97706; color: #fff; font-family: var(--display); font-size: 12.5px; font-weight: 700;
+    cursor: pointer;
+  }
+  .payment-row button:hover { opacity: 0.9; }
+
+  .debt-actions { display: flex; gap: 14px; margin-top: 6px; }
+  .debt-actions button {
+    width: auto; background: none; border: none; font-size: 12px; font-weight: 500;
+    cursor: pointer; padding: 2px 0;
+  }
+  .debt-actions .edit-btn { color: var(--accent); }
+  .debt-actions .remove-btn { color: var(--alert); }
+  .debt-actions button:hover { text-decoration: underline; }
+
+  .edit-form { margin-top: 10px; display: none; gap: 8px; flex-direction: column; }
+  .edit-form.open { display: flex; }
+  .edit-form input {
+    padding: 10px 12px; border: 1.5px solid var(--line); border-radius: var(--radius-sm);
+    background: #FBFBFD; font-family: var(--sans); font-size: 14px; color: var(--ink);
+  }
+  .edit-form .edit-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .edit-form button.save {
+    padding: 9px 14px; border-radius: var(--radius-sm); border: none;
+    background: var(--accent); color: #fff; font-family: var(--display); font-size: 12px; font-weight: 700; cursor: pointer;
+  }
+
+  .add-form { margin-top: 4px; }
+  .add-form label.field { display: block; font-size: 12px; font-weight: 500; color: var(--ink-soft); margin-bottom: 5px; margin-top: 12px; }
+  .add-form input {
+    width: 100%; padding: 11px 13px; border: 1.5px solid var(--line); border-radius: var(--radius-sm);
+    background: #FBFBFD; font-family: var(--sans); font-size: 14.5px; color: var(--ink);
+  }
+  .add-form input:focus-visible { outline: none; border-color: #D97706; box-shadow: 0 0 0 4px #FEF3C7; }
+  button.wide {
+    width: 100%; padding: 12px 16px; border-radius: 999px; border: none;
+    background: #D97706; color: #fff; font-family: var(--display); font-size: 13.5px; font-weight: 700;
+    cursor: pointer; margin-top: 12px;
+  }
+  button.wide:hover { opacity: 0.92; }
+
+  .status-line { margin-top: 12px; font-size: 12.5px; text-align: center; min-height: 16px; color: var(--ink-soft); font-weight: 500; }
+  .status-line.success { color: var(--accent-2); }
+  .status-line.error { color: var(--alert); }
+  .empty-hint { font-size: 12.5px; color: var(--ink-soft); text-align: center; padding: 12px 0; }
+</style>
+</head>
+<body>
+  <div class="app">
+    <div class="banner">
+      <a class="back-link" href="/">‹ Back</a>
+      <h1>Debt Tracking</h1>
+      <div class="sub">Track what's owed, and chip away at it.</div>
+    </div>
+
+    <div class="card" id="lockedMessage" style="display:none; text-align:center;">
+      <div class="icon-badge" style="margin:0 auto 12px;">🔒</div>
+      <h2 style="margin-bottom:6px;">No cycle yet</h2>
+      <p style="font-size:13px; color:var(--ink-soft); margin:0 0 16px;">Open your first cycle before making a debt payment.</p>
+      <a href="/" style="display:inline-block; padding:11px 20px; border-radius:999px; background:var(--accent); color:#fff; font-family:var(--display); font-weight:700; font-size:13px; text-decoration:none;">Go to Home</a>
+    </div>
+
+    <div id="debtContent">
+      <div class="card">
+        <div class="card-head">
+          <div class="icon-badge">💳</div>
+          <h2>Your Debts</h2>
+        </div>
+
+        <div id="debtList"></div>
+        <div class="empty-hint" id="emptyDebtHint" style="display:none;">No debts tracked yet — add your first one below.</div>
+
+        <div class="add-form">
+          <label class="field">Debt name</label>
+          <input type="text" id="newDebtName" placeholder="e.g. Car loan">
+          <label class="field">Total amount</label>
+          <input type="number" id="newDebtAmount" placeholder="0.00">
+          <button class="wide" type="button" onclick="addDebt()">+ Add Debt</button>
+        </div>
+
+        <div class="status-line" id="debtStatusLine"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const debtList = document.getElementById('debtList');
+  const emptyDebtHint = document.getElementById('emptyDebtHint');
+  const debtStatusLine = document.getElementById('debtStatusLine');
+
+  function loadDebts() {
+    fetch('/debts')
+      .then(res => res.json())
+      .then(data => renderDebts(data.debts || []))
+      .catch(() => {
+        debtStatusLine.textContent = 'Could not load debts.';
+        debtStatusLine.className = 'status-line error';
+      });
+  }
+
+  function renderDebts(debts) {
+    debtList.innerHTML = '';
+    if (debts.length === 0) {
+      emptyDebtHint.style.display = 'block';
+      return;
+    }
+    emptyDebtHint.style.display = 'none';
+
+    debts.forEach(debt => {
+      const isPaidOff = debt.amount_left_to_pay <= 0;
+
+      const row = document.createElement('div');
+      row.className = 'debt-row';
+
+      const top = document.createElement('div');
+      top.className = 'debt-top';
+      const name = document.createElement('span');
+      name.className = 'debt-name';
+      name.textContent = debt.debt_name;
+      const total = document.createElement('span');
+      total.className = 'debt-total';
+      total.textContent = 'Total: ' + Number(debt.amount).toFixed(2);
+      top.appendChild(name);
+      top.appendChild(total);
+
+      const remaining = document.createElement('div');
+      remaining.className = 'debt-remaining' + (isPaidOff ? ' paid-off' : '');
+      remaining.textContent = isPaidOff
+        ? 'Fully paid'
+        : 'Remaining: ' + Number(debt.amount_left_to_pay).toFixed(2);
+
+      row.appendChild(top);
+      row.appendChild(remaining);
+
+      if (isPaidOff) {
+        const badge = document.createElement('div');
+        badge.className = 'paid-badge';
+        badge.textContent = '✓ Paid off';
+        row.appendChild(badge);
+      } else {
+        const paymentRow = document.createElement('div');
+        paymentRow.className = 'payment-row';
+
+        const amountInput = document.createElement('input');
+        amountInput.type = 'number';
+        amountInput.placeholder = 'Payment amount';
+
+        const payBtn = document.createElement('button');
+        payBtn.type = 'button';
+        payBtn.textContent = 'Pay';
+        payBtn.addEventListener('click', () => makePayment(debt, amountInput.value));
+
+        paymentRow.appendChild(amountInput);
+        paymentRow.appendChild(payBtn);
+        row.appendChild(paymentRow);
+      }
+
+      const actions = document.createElement('div');
+      actions.className = 'debt-actions';
+
+      const editBtn = document.createElement('button');
+      editBtn.className = 'edit-btn';
+      editBtn.textContent = 'Edit';
+      editBtn.addEventListener('click', () => toggleEditForm(row, debt));
+
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'remove-btn';
+      removeBtn.textContent = 'Remove';
+      removeBtn.addEventListener('click', () => removeDebt(debt.debt_id));
+
+      actions.appendChild(editBtn);
+      actions.appendChild(removeBtn);
+      row.appendChild(actions);
+
+      const editForm = document.createElement('div');
+      editForm.className = 'edit-form';
+      editForm.innerHTML = `
+        <div class="edit-row">
+          <input type="number" class="edit-total" placeholder="Total" value="${debt.amount}">
+          <input type="number" class="edit-remaining" placeholder="Remaining" value="${debt.amount_left_to_pay}">
+        </div>
+        <button class="save" type="button">Save Changes</button>
+      `;
+      editForm.querySelector('.save').addEventListener('click', () => {
+        const newTotal = parseFloat(editForm.querySelector('.edit-total').value);
+        const newRemaining = parseFloat(editForm.querySelector('.edit-remaining').value);
+        saveDebtEdit(debt.debt_id, debt.debt_name, newTotal, newRemaining);
+      });
+      row.appendChild(editForm);
+
+      debtList.appendChild(row);
+    });
+  }
+
+  function toggleEditForm(row, debt) {
+    const form = row.querySelector('.edit-form');
+    form.classList.toggle('open');
+  }
+
+  function addDebt() {
+    const name = document.getElementById('newDebtName').value.trim();
+    const amount = parseFloat(document.getElementById('newDebtAmount').value);
+
+    if (!name || isNaN(amount)) {
+      debtStatusLine.textContent = 'Enter a name and amount first.';
+      debtStatusLine.className = 'status-line error';
+      return;
+    }
+
+    debtStatusLine.textContent = 'Adding…';
+    debtStatusLine.className = 'status-line';
+
+    fetch('/debts/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ debt: { debt_name: name, amount } }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'added') {
+          debtStatusLine.textContent = 'Added.';
+          debtStatusLine.className = 'status-line success';
+          document.getElementById('newDebtName').value = '';
+          document.getElementById('newDebtAmount').value = '';
+          loadDebts();
+        } else {
+          debtStatusLine.textContent = data.error || 'Could not add debt.';
+          debtStatusLine.className = 'status-line error';
+        }
+      })
+      .catch(err => {
+        debtStatusLine.textContent = 'Error: ' + err.message;
+        debtStatusLine.className = 'status-line error';
+      });
+  }
+
+  function saveDebtEdit(debtId, debtName, amount, amountLeftToPay) {
+    debtStatusLine.textContent = 'Saving…';
+    debtStatusLine.className = 'status-line';
+
+    fetch('/debts/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        debt: { debt_id: debtId, debt_name: debtName, amount, amount_left_to_pay: amountLeftToPay }
+      }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'updated') {
+          debtStatusLine.textContent = 'Updated.';
+          debtStatusLine.className = 'status-line success';
+          loadDebts();
+        } else {
+          debtStatusLine.textContent = data.error || 'Could not update debt.';
+          debtStatusLine.className = 'status-line error';
+        }
+      })
+      .catch(err => {
+        debtStatusLine.textContent = 'Error: ' + err.message;
+        debtStatusLine.className = 'status-line error';
+      });
+  }
+
+  function removeDebt(debtId) {
+    debtStatusLine.textContent = 'Removing…';
+    debtStatusLine.className = 'status-line';
+
+    fetch('/debts/remove', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ debt: { debt_id: debtId } }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'removed') {
+          debtStatusLine.textContent = 'Removed.';
+          debtStatusLine.className = 'status-line success';
+          loadDebts();
+        } else {
+          debtStatusLine.textContent = data.error || 'Could not remove debt.';
+          debtStatusLine.className = 'status-line error';
+        }
+      })
+      .catch(err => {
+        debtStatusLine.textContent = 'Error: ' + err.message;
+        debtStatusLine.className = 'status-line error';
+      });
+  }
+
+  function makePayment(debt, amountValue) {
+    const paymentAmount = parseFloat(amountValue);
+    if (isNaN(paymentAmount) || paymentAmount <= 0) {
+      debtStatusLine.textContent = 'Enter a valid payment amount.';
+      debtStatusLine.className = 'status-line error';
+      return;
+    }
+
+    debtStatusLine.textContent = 'Recording payment…';
+    debtStatusLine.className = 'status-line';
+
+    fetch('/debts/make-a-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        debt: { debt_id: debt.debt_id, debt_name: debt.debt_name, payment_amount: paymentAmount }
+      }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'payment recorded') {
+          debtStatusLine.textContent = 'Payment recorded.';
+          debtStatusLine.className = 'status-line success';
+          loadDebts();
+        } else {
+          debtStatusLine.textContent = data.error || 'Could not record payment.';
+          debtStatusLine.className = 'status-line error';
+        }
+      })
+      .catch(err => {
+        debtStatusLine.textContent = 'Error: ' + err.message;
+        debtStatusLine.className = 'status-line error';
+      });
+  }
+
+  fetch('/cycle-status')
+    .then(res => res.json())
+    .then(data => {
+      if (!data.active) {
+        document.getElementById('debtContent').style.display = 'none';
+        document.getElementById('lockedMessage').style.display = 'block';
+      }
+    })
+    .catch(() => {
+      document.getElementById('debtContent').style.display = 'none';
+      document.getElementById('lockedMessage').style.display = 'block';
+    });
+
+  loadDebts();
+</script>
+</body>
+</html>

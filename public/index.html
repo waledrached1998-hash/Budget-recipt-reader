@@ -70,13 +70,17 @@
     background: var(--card); border-radius: var(--radius-sm); padding: 14px;
     text-decoration: none; color: var(--ink);
     box-shadow: 0 1px 2px rgba(22,22,31,0.04), 0 8px 20px -12px rgba(22,22,31,0.14);
-    transition: transform 0.08s ease;
+    transition: transform 0.08s ease, background 0.2s ease;
+    border-left: 4px solid transparent;
   }
   .quick-action:active { transform: scale(0.97); }
   .quick-action .qa-icon { font-size: 20px; }
   .quick-action .qa-label { font-family: var(--display); font-size: 13px; font-weight: 700; }
   .quick-action .qa-note { font-size: 11px; color: var(--ink-soft); }
   .quick-action.coral .qa-icon { filter: none; }
+  .quick-action.full-width { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 12px; }
+  .quick-action.full-width .qa-icon { font-size: 22px; }
+  .quick-action.has-debt { background: #FEF3C7; border-left-color: #D97706; }
 
   .card {
     background: var(--card); border-radius: var(--radius); padding: 20px; margin-bottom: 14px;
@@ -185,6 +189,11 @@
         <span class="qa-icon">📄</span>
         <span class="qa-label">Recurring Bills</span>
         <span class="qa-note">Manage your bills</span>
+      </a>
+      <a href="/debt" class="quick-action full-width" id="debtTile">
+        <span class="qa-icon">💳</span>
+        <span class="qa-label">Debt Tracking</span>
+        <span class="qa-note">Track what's owed</span>
       </a>
     </div>
 
@@ -424,6 +433,17 @@
         }
       })
       .catch(err => console.error('Could not check cycle status:', err));
+
+    fetch('/debts')
+      .then(res => res.json())
+      .then(data => {
+        const debts = data.debts || [];
+        const hasUnpaidDebt = debts.some(d => d.amount_left_to_pay > 0);
+        if (hasUnpaidDebt) {
+          document.getElementById('debtTile').classList.add('has-debt');
+        }
+      })
+      .catch(err => console.error('Could not load debt status:', err));
   });
 
   const cameraInput = document.getElementById('cameraInput');

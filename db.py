@@ -397,7 +397,7 @@ def delete_debt(user_id, debt_id):
     conn.close()
 
 
-def get_debts(user_id):
+def get_user_debts(user_id):
     conn = get_connection()
     cursor = conn.execute(
         'SELECT debt_id, debt_name, amount, amount_left_to_pay FROM debt WHERE user_id = ?',
@@ -409,6 +409,26 @@ def get_debts(user_id):
         {"debt_id": row[0], "debt_name": row[1], "amount": row[2], "amount_left_to_pay": row[3]}
         for row in rows
     ]
+
+def get_debt(user_id,debt_id):
+    conn = get_connection()
+    cursor = conn.execute(
+        'SELECT debt_id, debt_name, amount, amount_left_to_pay FROM debt WHERE user_id = ? AND debt_id = ?',
+        (user_id,debt_id,)
+    )
+    row = cursor.fetchone()
+    conn.close()
+    return  {"debt_id": row[0], "debt_name": row[1], "amount": row[2], "amount_left_to_pay": row[3]}
+
+def update_debt_amount_left_to_pay(user_id,debt_id,amount):
+    conn = get_connection()
+    conn.execute('''
+        UPDATE debt SET
+            amount_left_to_pay = amount_left_to_pay-?
+        WHERE user_id = ? AND debt_id = ?
+    ''', (amount,user_id, debt_id,))
+    conn.commit()
+    conn.close()
 
 
 # ---------------------------------------------------------------------------
