@@ -283,7 +283,7 @@ def delete_cycle_income(cycle_id, name) :
     conn = get_connection()
     conn.execute('''
         DELETE FROM cycle_income 
-        WEHRE cycle_id = ? AND name = ?
+        WHERE cycle_id = ? AND name = ?
     ''', (cycle_id, name))
     conn.commit()
     conn.close()
@@ -313,7 +313,7 @@ def delete_cycle_savings(cycle_id, name) :
     conn = get_connection()
     conn.execute('''
         DELETE FROM cycle_savings 
-        WEHRE cycle_id = ? AND name = ?
+        WHERE cycle_id = ? AND name = ?
     ''', (cycle_id, name))
     conn.commit()
     conn.close()
